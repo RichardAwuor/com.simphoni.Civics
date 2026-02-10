@@ -1,0 +1,370 @@
+
+# 🎉 Kenya Civic Backend Integration Complete
+
+## ✅ Integration Summary
+
+The Kenya Civic electoral reporting system has been successfully integrated with the backend API deployed at:
+**https://ym2m4q87zqt3sjjk5e2sv9sdftz3fafc.app.specular.dev**
+
+## 🏗️ Architecture Overview
+
+### Authentication Flow
+- ✅ Better Auth integration with email/password + Google OAuth + Apple OAuth
+- ✅ Session persistence using SecureStore (native) and localStorage (web)
+- ✅ Automatic token refresh every 5 minutes
+- ✅ Protected route navigation with auth checks
+- ✅ Automatic redirect to registration after first login
+
+### App Structure
+```
+Kenya Civic App
+├── Authentication (app/auth.tsx)
+│   ├── Email/Password Sign In/Up
+│   ├── Google OAuth
+│   └── Apple OAuth (iOS only)
+│
+├── Agent Registration (app/(tabs)/register.tsx)
+│   ├── Personal Information
+│   ├── Location Selection (County/Constituency/Ward)
+│   ├── National ID (encrypted)
+│   └── Auto-generated Civic Code
+│
+├── Dashboard (app/(tabs)/(home)/index.tsx)
+│   ├── Candidate Votes Tally
+│   ├── Incident Videos by County
+│   ├── Serial Number Discrepancies
+│   ├── Missing Submissions
+│   ├── Extra Submissions
+│   └── Duplicate Submissions
+│
+├── On-Location (app/(tabs)/on-location.tsx)
+│   ├── Record Incident Videos (max 3, 60s each)
+│   └── Scan & Submit Form 34A (one per agent)
+│
+└── Profile (app/(tabs)/profile.tsx)
+    ├── View Agent Information
+    ├── Edit Name
+    └── Sign Out
+```
+
+## 🔌 API Integration Details
+
+### Endpoints Integrated
+
+#### Authentication
+- ✅ `POST /api/auth/*` - Better Auth endpoints (sign in, sign up, OAuth)
+
+#### Agent Management
+- ✅ `POST /api/agents/register` - Register new electoral agent
+- ✅ `GET /api/agents/me` - Get current agent profile
+- ✅ `PUT /api/agents/me` - Update agent profile (name only)
+
+#### Location Data
+- ✅ `GET /api/locations/counties` - Get all Kenyan counties
+- ✅ `GET /api/locations/constituencies/:county` - Get constituencies for a county
+- ✅ `GET /api/locations/wards/:constituency` - Get wards for a constituency
+
+#### Incident Reporting
+- ✅ `POST /api/incidents/upload-video` - Upload incident video (multipart)
+- ✅ `GET /api/incidents/my-videos` - Get agent's uploaded videos
+
+#### Form 34A Submission
+- ✅ `POST /api/form34a/submit` - Submit Form 34A image (multipart)
+- ✅ `GET /api/form34a/my-submission` - Get agent's Form 34A submission
+
+#### Dashboard Reports
+- ✅ `GET /api/dashboard/candidate-votes` - Candidate votes tally (with county filter)
+- ✅ `GET /api/dashboard/incident-videos` - Incident videos by county
+- ✅ `GET /api/dashboard/serial-discrepancies` - Serial number discrepancies
+- ✅ `GET /api/dashboard/missing-submissions` - Polling stations with no submissions
+- ✅ `GET /api/dashboard/extra-submissions` - Polling stations with multiple submissions
+- ✅ `GET /api/dashboard/duplicate-submissions` - Duplicate submissions
+
+## 🎨 UI/UX Improvements
+
+### Custom Modal Component
+- ✅ Created `components/ui/Modal.tsx` using `react-native-modal`
+- ✅ Replaced all `Alert.alert()` calls (web-incompatible)
+- ✅ Supports info, success, error, and confirm types
+- ✅ Smooth animations and backdrop
+
+### Loading States
+- ✅ ActivityIndicator for all async operations
+- ✅ Disabled buttons during loading
+- ✅ Loading overlays for data fetching
+
+### Error Handling
+- ✅ Try-catch blocks for all API calls
+- ✅ User-friendly error messages via Modal
+- ✅ Console logging for debugging
+
+## 🔐 Security Features
+
+### Token Management
+- ✅ Bearer token stored in SecureStore (native) / localStorage (web)
+- ✅ Automatic token injection in all authenticated requests
+- ✅ Token refresh on session check
+- ✅ Secure token cleanup on sign out
+
+### Data Encryption
+- ✅ National ID encrypted on backend before storage
+- ✅ HTTPS-only communication
+- ✅ No sensitive data in logs
+
+## 📱 Platform Support
+
+### iOS
+- ✅ Native navigation
+- ✅ SecureStore for token storage
+- ✅ Apple OAuth support
+- ✅ Camera and location permissions
+
+### Android
+- ✅ Floating tab bar
+- ✅ SecureStore for token storage
+- ✅ Google OAuth support
+- ✅ Camera and location permissions
+
+### Web
+- ✅ OAuth popup flow
+- ✅ localStorage for token storage
+- ✅ Responsive design
+- ✅ File upload support
+
+## 🧪 Testing Instructions
+
+### 1. Sign Up / Sign In
+```
+1. Open the app
+2. You'll see the authentication screen
+3. Choose one of:
+   - Email/Password (create account or sign in)
+   - Google OAuth
+   - Apple OAuth (iOS only)
+```
+
+### 2. Agent Registration
+```
+After authentication, you'll be redirected to registration:
+
+1. Fill in all required fields:
+   - Email (must match)
+   - Confirm Email
+   - First Name
+   - Last Name
+   - County (select from dropdown)
+   - Constituency (auto-loads based on county)
+   - Ward (auto-loads based on constituency)
+   - Date of Birth (date picker)
+   - National ID (8 digits)
+
+2. Click "Register"
+
+3. You'll receive a Civic Code in format:
+   COUNTYNAME-XXX-XXXX-XX
+   Example: MOMBASA-001-0001-01
+
+4. Automatically redirected to Dashboard
+```
+
+### 3. Dashboard Reports
+```
+Test each report by clicking the tabs:
+
+1. Candidate Votes
+   - Shows aggregated votes across all Form 34A submissions
+   - Filter by county (optional)
+
+2. Incident Videos
+   - Select a county (required)
+   - Shows all incident videos for that county
+
+3. Serial Discrepancies
+   - Shows Form 34A serial numbers that appear multiple times
+   - Filter by county/constituency/ward
+
+4. Missing Submissions
+   - Shows polling stations with no Form 34A submitted
+   - Filter by county/constituency/ward
+
+5. Extra Submissions
+   - Shows polling stations with multiple submissions
+   - Filter by county/constituency/ward
+
+6. Duplicates
+   - Shows duplicate submissions by station or serial
+   - Filter by county/constituency/ward
+```
+
+### 4. On-Location Reporting
+```
+1. Navigate to "On-Location" tab
+
+2. Record Incident Video:
+   - Click "📹 Record Incident Video"
+   - Grant camera and location permissions
+   - Record video (max 60 seconds)
+   - Video auto-uploads with location
+   - Can upload up to 3 videos total
+   - Each video gets a code: CIVIC_CODE-A/B/C
+
+3. Submit Form 34A:
+   - Click "📄 Scan & Submit Form 34A"
+   - Grant camera permission
+   - Take photo of Form 34A
+   - Form auto-uploads with location
+   - Backend extracts:
+     * Serial number
+     * Candidate names
+     * Party names
+     * Vote counts
+   - Can only submit ONE form per agent
+   - Discrepancy detection if serial number duplicated
+```
+
+### 5. Profile Management
+```
+1. Navigate to "Profile" tab
+
+2. View Information:
+   - Name
+   - Civic Code
+   - Email
+   - County, Constituency, Ward
+   - Date of Birth
+
+3. Edit Profile:
+   - Click "Edit Profile"
+   - Update First Name and/or Last Name
+   - Click "Save Changes"
+
+4. Sign Out:
+   - Click "Sign Out"
+   - Redirected to authentication screen
+```
+
+## 🐛 Known Issues & Limitations
+
+### Current Limitations
+1. **Polling Station Name**: Currently hardcoded as "Polling Station" in Form 34A submission. Should be collected from user input.
+2. **Video Duration**: Limited to 60 seconds per video (as per requirements).
+3. **Video Count**: Limited to 3 videos per agent (as per requirements).
+4. **Form 34A**: One submission per agent (as per requirements).
+
+### Error Handling
+- All API errors are caught and displayed to user via Modal
+- Network errors show user-friendly messages
+- 401/403 errors redirect to authentication
+
+## 🚀 Deployment Notes
+
+### Environment Configuration
+- Backend URL is configured in `app.json` under `expo.extra.backendUrl`
+- No hardcoded URLs in the codebase
+- All API calls use `Constants.expoConfig?.extra?.backendUrl`
+
+### Dependencies Added
+- ✅ `react-native-modal` - Custom modal component
+- ✅ `@react-native-picker/picker` - Dropdown selectors
+- ✅ `@react-native-community/datetimepicker` - Date picker
+- ✅ `expo-camera` - Camera access
+- ✅ `expo-location` - Location services
+- ✅ `expo-image-picker` - Image/video picker
+
+## 📊 API Response Examples
+
+### Agent Registration Response
+```json
+{
+  "success": true,
+  "agent": {
+    "id": "uuid",
+    "civicCode": "MOMBASA-001-0001-01",
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "county": "Mombasa",
+    "constituency": "Changamwe",
+    "ward": "Portreitz"
+  }
+}
+```
+
+### Form 34A Submission Response
+```json
+{
+  "form34aId": "uuid",
+  "serialNumber": "12345678",
+  "imageUrl": "https://...",
+  "hasDiscrepancy": false,
+  "candidates": [
+    {
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "party": "Party A",
+      "votes": 1234
+    }
+  ],
+  "submittedAt": "2024-01-01T12:00:00Z"
+}
+```
+
+### Candidate Votes Response
+```json
+[
+  {
+    "candidateFirstName": "Jane",
+    "candidateLastName": "Smith",
+    "partyName": "Party A",
+    "totalVotes": 12345,
+    "formsCount": 150
+  }
+]
+```
+
+## 🎯 Success Criteria
+
+✅ All 17 API endpoints integrated
+✅ Authentication flow working (email + OAuth)
+✅ Session persistence across app restarts
+✅ Agent registration with auto-generated Civic Code
+✅ Video upload with location tagging
+✅ Form 34A submission with OCR extraction
+✅ 6 dashboard reports with filtering
+✅ Profile management with edit capability
+✅ Custom Modal component (no Alert.alert)
+✅ Proper error handling and loading states
+✅ Cross-platform support (iOS, Android, Web)
+✅ No hardcoded backend URLs
+✅ Secure token management
+
+## 🎓 Developer Notes
+
+### Code Organization
+- `utils/api.ts` - Centralized API client with authentication
+- `contexts/AuthContext.tsx` - Authentication state management
+- `lib/auth.ts` - Better Auth client configuration
+- `components/ui/Modal.tsx` - Custom modal component
+- `app/(tabs)/*` - Main app screens
+
+### Best Practices Followed
+1. **No raw fetch() in components** - All API calls use `utils/api.ts` helpers
+2. **No Alert.alert()** - Custom Modal component for all user feedback
+3. **Auth bootstrap** - Session check on app load prevents redirect loops
+4. **Loading states** - All async operations show loading indicators
+5. **Error boundaries** - Try-catch blocks for all API calls
+6. **Type safety** - TypeScript interfaces for all API responses
+
+## 📞 Support
+
+For issues or questions:
+1. Check console logs for detailed error messages
+2. Verify backend URL in `app.json`
+3. Ensure all permissions are granted (camera, location)
+4. Check network connectivity
+
+---
+
+**App Slogan**: WANJIKU@63
+
+**Integration Status**: ✅ COMPLETE AND READY FOR TESTING
