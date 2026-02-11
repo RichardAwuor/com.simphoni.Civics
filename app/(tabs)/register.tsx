@@ -17,6 +17,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "@/contexts/AuthContext";
 import { authenticatedGet, authenticatedPost } from "@/utils/api";
 import CustomModal from "@/components/ui/Modal";
+import BiometricSetup from "@/components/BiometricSetup";
 import { useRouter } from "expo-router";
 
 interface County {
@@ -48,6 +49,8 @@ interface Agent {
   dateOfBirth: string;
 }
 
+type RegistrationStep = "form" | "biometric" | "complete";
+
 export default function RegisterScreen() {
   const theme = useTheme();
   const router = useRouter();
@@ -56,6 +59,7 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [checkingAgent, setCheckingAgent] = useState(true);
   const [agent, setAgent] = useState<Agent | null>(null);
+  const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("form");
 
   // Form fields
   const [email, setEmail] = useState("");
@@ -179,6 +183,7 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
+      console.log("[Register] Submitting registration form");
       const response = await authenticatedPost<{ agent: Agent; success: boolean }>(
         "/api/agents/register",
         {
@@ -196,15 +201,9 @@ export default function RegisterScreen() {
 
       if (response.success) {
         setAgent(response.agent);
-        showModal(
-          "Success",
-          `Registration successful! Your Civic Code is: ${response.agent.civicCode}`,
-          "success"
-        );
-        // Redirect to home after modal closes
-        setTimeout(() => {
-          router.replace("/(tabs)/(home)/");
-        }, 2000);
+        console.log("[Register] Registration successful, moving to biometric setup");
+        // Move to biometric setup step
+        setRegistrationStep("biometric");
       }
     } catch (error: any) {
       console.error("[Register] Registration failed:", error);
@@ -212,6 +211,38 @@ export default function RegisterScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBiometricComplete = async (biometricPublicKey: string | null) => {
+    if (biometricPublicKey && agent) {
+      try {
+        console.log("[Register] Registering biometric credential");
+        await authenticatedPost("/api/biometric/register", {
+          email: agent.email,
+          biometricPublicKey,
+        });
+        console.log("[Register] Biometric registration successful");
+      } catch (error) {
+        console.error("[Register] Failed to register biometric:", error);
+        // Don't block registration if biometric fails
+      }
+    }
+
+    // Show success message and redirect
+    setRegistrationStep("complete");
+    showModal(
+      "Success",
+      `Registration complete! Your Civic Code is: ${agent?.civicCode}`,
+      "success"
+    );
+    setTimeout(() => {
+      router.replace("/(tabs)/(home)/");
+    }, 2000);
+  };
+
+  const handleBiometricSkip = () => {
+    console.log("[Register] User skipped biometric setup");
+    handleBiometricComplete(null);
   };
 
   if (checkingAgent) {
@@ -225,16 +256,35 @@ export default function RegisterScreen() {
     );
   }
 
-  if (agent) {
+  if (agent && registrationStep === "complete") {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
         <Text style={[styles.successText, { color: theme.colors.text }]}>
-          Already registered!
+          Registration Complete!
         </Text>
         <Text style={[styles.civicCode, { color: theme.colors.primary }]}>
           {agent.civicCode}
         </Text>
       </View>
+    );
+  }
+
+  if (registrationStep === "biometric" && agent) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+        <BiometricSetup
+          email={agent.email}
+          onComplete={handleBiometricComplete}
+          onSkip={handleBiometricSkip}
+        />
+        <CustomModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          type={modalConfig.type}
+        />
+      </SafeAreaView>
     );
   }
 
@@ -374,7 +424,7 @@ export default function RegisterScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.registerButtonText}>Register</Text>
+              <Text style={styles.registerButtonText}>Continue to Biometric Setup</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -441,6 +491,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 16,
+    justifyContent: "center",
   },
   pickerContainer: {
     borderWidth: 1,

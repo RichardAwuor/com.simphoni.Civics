@@ -8,20 +8,22 @@ The Kenya Civic electoral reporting system has been successfully integrated with
 
 ## 🏗️ Architecture Overview
 
-### Authentication Flow
-- ✅ Better Auth integration with email/password + Google OAuth + Apple OAuth
+### Authentication Flow (PASSWORDLESS)
+- ✅ **Email OTP Authentication** - One-time codes sent to email (no passwords!)
+- ✅ **Biometric Authentication** - Fingerprint/Face ID for quick sign-in
 - ✅ Session persistence using SecureStore (native) and localStorage (web)
 - ✅ Automatic token refresh every 5 minutes
 - ✅ Protected route navigation with auth checks
 - ✅ Automatic redirect to registration after first login
+- ✅ Biometric credential storage per device
 
 ### App Structure
 ```
 Kenya Civic App
 ├── Authentication (app/auth.tsx)
-│   ├── Email/Password Sign In/Up
-│   ├── Google OAuth
-│   └── Apple OAuth (iOS only)
+│   ├── Email OTP Sign In (passwordless)
+│   ├── Biometric Sign In (fingerprint/face)
+│   └── OTP Verification
 │
 ├── Agent Registration (app/(tabs)/register.tsx)
 │   ├── Personal Information
@@ -51,8 +53,11 @@ Kenya Civic App
 
 ### Endpoints Integrated
 
-#### Authentication
-- ✅ `POST /api/auth/*` - Better Auth endpoints (sign in, sign up, OAuth)
+#### Authentication (Passwordless)
+- ✅ `POST /api/auth/request-otp` - Request OTP for email
+- ✅ `POST /api/auth/verify-otp` - Verify OTP and create/sign in user
+- ✅ `POST /api/biometric/register` - Register biometric credential
+- ✅ `POST /api/biometric/verify` - Verify biometric and sign in
 
 #### Agent Management
 - ✅ `POST /api/agents/register` - Register new electoral agent
@@ -133,22 +138,38 @@ Kenya Civic App
 
 ## 🧪 Testing Instructions
 
-### 1. Sign Up / Sign In
+### 1. Sign In (Passwordless)
 ```
+FIRST-TIME SIGN IN:
 1. Open the app
-2. You'll see the authentication screen
-3. Choose one of:
-   - Email/Password (create account or sign in)
-   - Google OAuth
-   - Apple OAuth (iOS only)
+2. Enter your email address
+3. Click "Send Verification Code"
+4. Check your email for a 6-digit OTP code
+5. Enter the code in the app
+6. Click "Verify Code"
+7. You'll be authenticated and redirected to registration
+
+RETURNING USER SIGN IN:
+Option A - Email OTP:
+1. Enter your email address
+2. Click "Send Verification Code"
+3. Check your email for the OTP
+4. Enter the code and verify
+
+Option B - Biometric (if enabled):
+1. Enter your email address
+2. Click "Sign in with Fingerprint"
+3. Authenticate with your fingerprint/face
+4. Instant sign-in!
 ```
 
 ### 2. Agent Registration
 ```
-After authentication, you'll be redirected to registration:
+After OTP verification, you'll be redirected to registration:
 
+STEP 1: Fill Registration Form
 1. Fill in all required fields:
-   - Email (must match)
+   - Email (pre-filled)
    - Confirm Email
    - First Name
    - Last Name
@@ -158,13 +179,25 @@ After authentication, you'll be redirected to registration:
    - Date of Birth (date picker)
    - National ID (8 digits)
 
-2. Click "Register"
+2. Click "Continue to Biometric Setup"
 
-3. You'll receive a Civic Code in format:
+STEP 2: Set Up Biometric (Optional)
+1. If biometric is available:
+   - Click "Enable Fingerprint" (or "Enable Face ID")
+   - Authenticate with your device's biometric sensor
+   - Your biometric credential will be registered
+   - Or click "Skip for now" to skip
+
+2. If biometric is not available:
+   - You'll see a message explaining biometric is not set up
+   - Click "Continue without Biometric"
+
+STEP 3: Registration Complete
+1. You'll receive a Civic Code in format:
    COUNTYNAME-XXX-XXXX-XX
    Example: MOMBASA-001-0001-01
 
-4. Automatically redirected to Dashboard
+2. Automatically redirected to Dashboard
 ```
 
 ### 3. Dashboard Reports
@@ -322,11 +355,32 @@ Test each report by clicking the tabs:
 ]
 ```
 
+## 🔐 Passwordless Authentication Benefits
+
+### User Experience
+- ✅ **No passwords to remember** - Just use your email
+- ✅ **Fast sign-in** - Biometric authentication is instant
+- ✅ **Secure** - OTP codes expire after 10 minutes
+- ✅ **Accessible** - Works on all devices with email
+
+### Security
+- ✅ **No password leaks** - No passwords to steal or forget
+- ✅ **Phishing resistant** - OTP codes are one-time use
+- ✅ **Device-bound** - Biometric credentials tied to device
+- ✅ **Multi-factor** - Email + biometric = 2FA
+
+### Implementation
+- ✅ **Simple backend** - No password hashing or validation
+- ✅ **Better Auth integration** - Uses Better Auth's OTP system
+- ✅ **Cross-platform** - Works on iOS, Android, and Web
+- ✅ **Fallback** - OTP always available if biometric fails
+
 ## 🎯 Success Criteria
 
-✅ All 17 API endpoints integrated
-✅ Authentication flow working (email + OAuth)
+✅ All API endpoints integrated (including passwordless auth)
+✅ Passwordless authentication flow working (Email OTP + Biometric)
 ✅ Session persistence across app restarts
+✅ Biometric credential storage and verification
 ✅ Agent registration with auto-generated Civic Code
 ✅ Video upload with location tagging
 ✅ Form 34A submission with OCR extraction
@@ -367,4 +421,18 @@ For issues or questions:
 
 **App Slogan**: WANJIKU@63
 
+**Authentication**: Passwordless (Email OTP + Biometric)
+
 **Integration Status**: ✅ COMPLETE AND READY FOR TESTING
+
+---
+
+## 🚀 Quick Start for Testing
+
+1. **Sign In**: Enter email → Receive OTP → Verify code
+2. **Register**: Fill form → Set up biometric (optional)
+3. **Use App**: Upload videos, submit Form 34A, view dashboard
+4. **Sign Out**: Test sign out functionality
+5. **Sign In Again**: Use biometric for instant access!
+
+**No passwords required!** 🎉

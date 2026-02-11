@@ -1,3 +1,4 @@
+
 import { createAuthClient } from "better-auth/react";
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
@@ -51,6 +52,33 @@ export async function clearAuthTokens() {
     localStorage.removeItem(BEARER_TOKEN_KEY);
   } else {
     await SecureStore.deleteItemAsync(BEARER_TOKEN_KEY);
+  }
+}
+
+export async function storeBiometricKey(email: string, biometricPublicKey: string) {
+  const storageKey = `biometric_key_${email}`;
+  if (Platform.OS === "web") {
+    localStorage.setItem(storageKey, biometricPublicKey);
+  } else {
+    await SecureStore.setItemAsync(storageKey, biometricPublicKey);
+  }
+}
+
+export async function getBiometricKey(email: string): Promise<string | null> {
+  const storageKey = `biometric_key_${email}`;
+  if (Platform.OS === "web") {
+    return localStorage.getItem(storageKey);
+  } else {
+    return await SecureStore.getItemAsync(storageKey);
+  }
+}
+
+export async function clearBiometricKey(email: string) {
+  const storageKey = `biometric_key_${email}`;
+  if (Platform.OS === "web") {
+    localStorage.removeItem(storageKey);
+  } else {
+    await SecureStore.deleteItemAsync(storageKey);
   }
 }
 

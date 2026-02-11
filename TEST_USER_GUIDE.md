@@ -10,43 +10,66 @@
 npm run dev
 ```
 
-### Step 2: Create Test Account
+### Step 2: Sign In with Passwordless OTP
 
-#### Option A: Email/Password
-1. Click "Sign Up" on the auth screen
-2. Enter test credentials:
-   ```
-   Name: Test Agent
-   Email: test@kenyacivic.com
-   Password: TestPass123!
-   ```
-3. Click "Sign Up"
+**🔐 No passwords required! The app uses email verification codes.**
 
-#### Option B: Google OAuth (Recommended for Web)
-1. Click "Continue with Google"
-2. Sign in with your Google account
-3. Authorize the app
+#### First-Time Sign In:
+1. Enter your email address (use a real email you can access)
+2. Click **"Send Verification Code"**
+3. Check your email for a 6-digit OTP code
+4. Enter the code in the app
+5. Click **"Verify Code"**
+6. You'll be authenticated and redirected to registration
+
+#### Returning User Sign In:
+**Option A: Email OTP**
+1. Enter your email address
+2. Click **"Send Verification Code"**
+3. Check your email for the OTP
+4. Enter the code and verify
+
+**Option B: Biometric (if enabled)**
+1. Enter your email address
+2. Click **"Sign in with Fingerprint"**
+3. Authenticate with your fingerprint/face
+4. You'll be signed in immediately
 
 ### Step 3: Complete Agent Registration
 
-After authentication, you'll be redirected to registration. Fill in:
+After OTP verification, you'll be redirected to registration. Fill in:
 
 ```
-Email: test@kenyacivic.com
+Email: test@kenyacivic.com (pre-filled)
 Confirm Email: test@kenyacivic.com
 First Name: John
 Last Name: Doe
 County: Mombasa (select from dropdown)
-Constituency: Changamwe (auto-loads)
-Ward: Portreitz (auto-loads)
+Constituency: Changamwe (auto-loads based on county)
+Ward: Portreitz (auto-loads based on constituency)
 Date of Birth: 1990-01-01 (use date picker)
 National ID: 12345678 (8 digits)
 ```
 
-Click "Register" and you'll receive your Civic Code:
-**MOMBASA-001-0001-01** (example)
+Click **"Continue to Biometric Setup"**
 
-### Step 4: Test Dashboard Reports
+### Step 4: Set Up Biometric Authentication (Optional)
+
+After registration, you'll see the biometric setup screen:
+
+1. **If biometric is available:**
+   - Click **"Enable Fingerprint"** (or "Enable Face ID" on iOS)
+   - Authenticate with your device's biometric sensor
+   - Your biometric credential will be registered
+   - Or click **"Skip for now"** to skip
+
+2. **If biometric is not available:**
+   - You'll see a message explaining biometric is not set up
+   - Click **"Continue without Biometric"**
+
+You'll receive your Civic Code: **MOMBASA-001-0001-01** (example)
+
+### Step 5: Test Dashboard Reports
 
 Navigate to the Dashboard (Home tab) and test each report:
 
@@ -79,7 +102,7 @@ Navigate to the Dashboard (Home tab) and test each report:
 - Red border indicates duplicates
 - Filter by county/constituency/ward
 
-### Step 5: Test On-Location Features
+### Step 6: Test On-Location Features
 
 Navigate to "On-Location" tab:
 
@@ -106,7 +129,7 @@ Navigate to "On-Location" tab:
 7. Form details appear below
 8. **Limit**: Can only submit ONE form per agent
 
-### Step 6: Test Profile Management
+### Step 7: Test Profile Management
 
 Navigate to "Profile" tab:
 
@@ -130,13 +153,18 @@ Navigate to "Profile" tab:
 
 ## 🎯 Test Scenarios
 
-### Scenario 1: New Agent Registration
+### Scenario 1: New Agent Registration with Biometric
 ```
-1. Sign up with new email
-2. Complete registration form
-3. Verify Civic Code generation
-4. Check that you're redirected to Dashboard
-5. Verify agent info appears in Profile
+1. Enter email → Request OTP
+2. Check email → Enter 6-digit code
+3. Verify OTP → Redirected to registration
+4. Fill registration form
+5. Set up biometric authentication
+6. Verify Civic Code generation
+7. Check that you're redirected to Dashboard
+8. Verify agent info appears in Profile
+9. Sign out
+10. Sign in with biometric → Instant access
 ```
 
 ### Scenario 2: Video Upload Workflow
@@ -187,12 +215,31 @@ Navigate to "Profile" tab:
 
 ### Scenario 6: Session Persistence
 ```
-1. Sign in
+1. Sign in with OTP
 2. Complete registration
 3. Close browser/app
 4. Reopen browser/app
 5. Verify you're still signed in
 6. Verify you're on Dashboard (not registration)
+```
+
+### Scenario 7: Passwordless Authentication Flow
+```
+1. New user enters email → Receives OTP
+2. Verifies OTP → Account created
+3. Completes registration → Sets up biometric
+4. Signs out
+5. Returns later → Enters email → Uses biometric
+6. Instant sign-in (no OTP needed)
+```
+
+### Scenario 8: OTP Expiration
+```
+1. Request OTP
+2. Wait 10+ minutes
+3. Try to verify expired OTP → Error
+4. Request new OTP
+5. Verify within 10 minutes → Success
 ```
 
 ## 🐛 Expected Behaviors
@@ -238,50 +285,139 @@ Navigate to "Profile" tab:
 - Miritini
 - Port Reitz
 
-## 🎬 Demo Flow (5 minutes)
+## 🎬 Demo Flow (6 minutes)
 
 ```
-1. Sign Up (30s)
-   → Email: demo@test.com
-   → Password: Demo123!
+1. Request OTP (30s)
+   → Email: demo@kenyacivic.com
+   → Click "Send Verification Code"
+   → Check email for OTP
 
-2. Register Agent (1m)
+2. Verify OTP (30s)
+   → Enter 6-digit code
+   → Click "Verify Code"
+   → Redirected to registration
+
+3. Register Agent (1m)
    → Fill form with Mombasa/Changamwe/Portreitz
+   → Click "Continue to Biometric Setup"
+
+4. Set Up Biometric (30s)
+   → Click "Enable Fingerprint"
+   → Authenticate with fingerprint
    → Get Civic Code
 
-3. Record Video (1m)
+5. Record Video (1m)
    → Go to On-Location
    → Record 10-second video
    → Verify upload success
 
-4. Submit Form 34A (1m)
+6. Submit Form 34A (1m)
    → Take photo of any document
    → Verify extraction (may be mock data)
    → Check success message
 
-5. View Dashboard (1m)
+7. View Dashboard (1m)
    → Check Candidate Votes
    → Filter by Mombasa
    → Check Incident Videos
 
-6. Edit Profile (30s)
+8. Edit Profile (30s)
    → Change name
    → Save
    → Verify update
 
-7. Sign Out & In (30s)
+9. Sign Out & Biometric Sign In (30s)
    → Sign out
-   → Sign in again
-   → Verify session restored
+   → Enter email
+   → Click "Sign in with Fingerprint"
+   → Instant access
 ```
 
+## 🔌 API Endpoints
+
+Backend URL: `https://ym2m4q87zqt3sjjk5e2sv9sdftz3fafc.app.specular.dev`
+
+### Authentication (Passwordless)
+- **POST /api/auth/request-otp** - Request OTP for email
+  ```json
+  { "email": "user@example.com" }
+  ```
+- **POST /api/auth/verify-otp** - Verify OTP and sign in
+  ```json
+  { 
+    "email": "user@example.com", 
+    "code": "123456"
+  }
+  ```
+- **POST /api/biometric/register** - Register biometric credential
+  ```json
+  { 
+    "email": "user@example.com", 
+    "biometricPublicKey": "device_key_123" 
+  }
+  ```
+- **POST /api/biometric/verify** - Sign in with biometric
+  ```json
+  { 
+    "email": "user@example.com", 
+    "biometricPublicKey": "device_key_123" 
+  }
+  ```
+
+### Agents
+- **GET /api/agents/me** - Get current agent profile
+- **PUT /api/agents/me** - Update agent profile
+- **POST /api/agents/register** - Register new agent
+
+### Locations
+- **GET /api/locations/counties** - Get all Kenyan counties
+- **GET /api/locations/constituencies/:county** - Get constituencies
+- **GET /api/locations/wards/:constituency** - Get wards
+
+### Incidents
+- **POST /api/incidents/upload-video** - Upload incident video
+- **GET /api/incidents/my-videos** - Get current agent's videos
+
+### Form 34A
+- **POST /api/form34a/submit** - Submit Form 34A
+- **GET /api/form34a/my-submission** - Get current agent's submission
+
+### Dashboard
+- **GET /api/dashboard/candidate-votes** - Get aggregated votes
+- **GET /api/dashboard/incident-videos** - Get incident videos
+- **GET /api/dashboard/serial-discrepancies** - Get discrepancies
+- **GET /api/dashboard/missing-submissions** - Get missing submissions
+- **GET /api/dashboard/extra-submissions** - Get extra submissions
+- **GET /api/dashboard/duplicate-submissions** - Get duplicates
+
 ## 🔍 Troubleshooting
+
+### Issue: "Failed to send verification code"
+**Solution**: 
+1. Check your email address is valid
+2. Verify your internet connection
+3. Check spam folder for OTP email
+4. Try again after a few seconds
+
+### Issue: "Invalid verification code"
+**Solution**: 
+1. Make sure you're entering the correct 6-digit code
+2. OTP codes expire after 10 minutes
+3. Request a new code if expired
+4. Check for typos in the code
+
+### Issue: "No biometric credential found"
+**Solution**: 
+1. You need to set up biometric during registration
+2. Or sign in with email OTP instead
+3. Check if biometric is enabled on your device
 
 ### Issue: "Backend URL not configured"
 **Solution**: Check `app.json` → `expo.extra.backendUrl` is set
 
 ### Issue: "Authentication token not found"
-**Solution**: Sign out and sign in again
+**Solution**: Sign out and sign in again with OTP
 
 ### Issue: Camera not working
 **Solution**: Grant camera permissions in device settings

@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Platform } from "react-native";
 import * as Linking from "expo-linking";
-import { authClient, setBearerToken, clearAuthTokens } from "@/lib/auth";
+import * as SecureStore from "expo-secure-store";
+import { authClient, setBearerToken, clearAuthTokens, BEARER_TOKEN_KEY } from "@/lib/auth";
 
 interface User {
   id: string;
@@ -13,59 +15,15 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string, name?: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithApple: () => Promise<void>;
-  signInWithGitHub: () => Promise<void>;
+  signInWithEmailOTP: (email: string) => Promise<void>;
+  verifyOTP: (email: string, otp: string) => Promise<void>;
+  verifyOTPWithRegistration: (email: string, otp: string, registrationData: any) => Promise<void>;
+  signInWithBiometric: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   fetchUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-function openOAuthPopup(provider: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const popupUrl = `${window.location.origin}/auth-popup?provider=${provider}`;
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-
-    const popup = window.open(
-      popupUrl,
-      "oauth-popup",
-      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
-    );
-
-    if (!popup) {
-      reject(new Error("Failed to open popup. Please allow popups."));
-      return;
-    }
-
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === "oauth-success" && event.data?.token) {
-        window.removeEventListener("message", handleMessage);
-        clearInterval(checkClosed);
-        resolve(event.data.token);
-      } else if (event.data?.type === "oauth-error") {
-        window.removeEventListener("message", handleMessage);
-        clearInterval(checkClosed);
-        reject(new Error(event.data.error || "OAuth failed"));
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    const checkClosed = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(checkClosed);
-        window.removeEventListener("message", handleMessage);
-        reject(new Error("Authentication cancelled"));
-      }
-    }, 500);
-  });
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -76,15 +34,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for deep links (e.g. from social auth redirects)
     const subscription = Linking.addEventListener("url", (event) => {
-      console.log("Deep link received, refreshing user session");
-      // Allow time for the client to process the token if needed
+      console.log("[AuthContext] Deep link received, refreshing user session");
       setTimeout(() => fetchUser(), 500);
     });
 
     // POLLING: Refresh session every 5 minutes to keep SecureStore token in sync
-    // This prevents 401 errors when the session token rotates
     const intervalId = setInterval(() => {
-      console.log("Auto-refreshing user session to sync token...");
+      console.log("[AuthContext] Auto-refreshing user session to sync token...");
       fetchUser();
     }, 5 * 60 * 1000); // 5 minutes
 
@@ -109,78 +65,113 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await clearAuthTokens();
       }
     } catch (error) {
-      console.error("Failed to fetch user:", error);
+      console.error("[AuthContext] Failed to fetch user:", error);
       setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const signInWithEmail = async (email: string, password: string) => {
+  const signInWithEmailOTP = async (email: string) => {
     try {
-      await authClient.signIn.email({ email, password });
-      await fetchUser();
+      console.log("[AuthContext] Sending OTP to:", email);
+      const { apiPost } = await import("@/utils/api");
+      await apiPost("/api/auth/request-otp", { email });
+      console.log("[AuthContext] OTP sent successfully");
     } catch (error) {
-      console.error("Email sign in failed:", error);
+      console.error("[AuthContext] Failed to send OTP:", error);
       throw error;
     }
   };
 
-  const signUpWithEmail = async (email: string, password: string, name?: string) => {
+  const verifyOTP = async (email: string, otp: string) => {
     try {
-      await authClient.signUp.email({
+      console.log("[AuthContext] Verifying OTP for:", email);
+      const { apiPost } = await import("@/utils/api");
+      const response = await apiPost<{ token: string; user: User }>("/api/auth/verify-otp", {
         email,
-        password,
-        name,
-        // Ensure name is passed in header or logic if required, usually passed in body
+        code: otp,
       });
+      
+      if (response.token) {
+        await setBearerToken(response.token);
+        console.log("[AuthContext] OTP verified, token saved");
+      }
+      
       await fetchUser();
     } catch (error) {
-      console.error("Email sign up failed:", error);
+      console.error("[AuthContext] OTP verification failed:", error);
       throw error;
     }
   };
 
-  const signInWithSocial = async (provider: "google" | "apple" | "github") => {
+  const verifyOTPWithRegistration = async (email: string, otp: string, registrationData: any) => {
     try {
-      if (Platform.OS === "web") {
-        const token = await openOAuthPopup(provider);
-        await setBearerToken(token);
-        await fetchUser();
-      } else {
-        // Native: Use expo-linking to generate a proper deep link
-        const callbackURL = Linking.createURL("/register");
-        await authClient.signIn.social({
-          provider,
-          callbackURL,
-        });
-        // Note: The redirect will reload the app or be handled by deep linking.
-        // fetchUser will be called on mount or via event listener if needed.
-        // For simple flow, we might need to listen to URL events.
-        // But better-auth expo client handles the redirect and session storage?
-        // We typically need to wait or rely on fetchUser on next app load.
-        // For now, call fetchUser just in case.
-        await fetchUser();
+      console.log("[AuthContext] Verifying OTP with registration data for:", email);
+      const { apiPost } = await import("@/utils/api");
+      const response = await apiPost<{ token: string; user: User }>("/api/auth/verify-otp", {
+        email,
+        code: otp,
+        ...registrationData,
+      });
+      
+      if (response.token) {
+        await setBearerToken(response.token);
+        console.log("[AuthContext] OTP verified with registration, token saved");
       }
+      
+      await fetchUser();
     } catch (error) {
-      console.error(`${provider} sign in failed:`, error);
+      console.error("[AuthContext] OTP verification with registration failed:", error);
       throw error;
     }
   };
 
-  const signInWithGoogle = () => signInWithSocial("google");
-  const signInWithApple = () => signInWithSocial("apple");
-  const signInWithGitHub = () => signInWithSocial("github");
+  const signInWithBiometric = async (email: string) => {
+    try {
+      console.log("[AuthContext] Signing in with biometric for:", email);
+      
+      // Get the stored biometric public key for this email
+      const storageKey = `biometric_key_${email}`;
+      let biometricPublicKey: string | null = null;
+      
+      if (Platform.OS === "web") {
+        biometricPublicKey = localStorage.getItem(storageKey);
+      } else {
+        biometricPublicKey = await SecureStore.getItemAsync(storageKey);
+      }
+
+      if (!biometricPublicKey) {
+        throw new Error("No biometric credential found for this email");
+      }
+
+      const { apiPost } = await import("@/utils/api");
+      const response = await apiPost<{ token: string; user: User }>("/api/biometric/verify", {
+        email,
+        biometricPublicKey,
+      });
+      
+      if (response.token) {
+        await setBearerToken(response.token);
+        console.log("[AuthContext] Biometric verification successful, token saved");
+      }
+      
+      await fetchUser();
+    } catch (error) {
+      console.error("[AuthContext] Biometric sign in failed:", error);
+      throw error;
+    }
+  };
 
   const signOut = async () => {
     try {
       await authClient.signOut();
     } catch (error) {
-      console.error("Sign out failed (API):", error);
+      console.error("[AuthContext] Sign out failed (API):", error);
     } finally {
-       // Always clear local state
-       setUser(null);
-       await clearAuthTokens();
+      // Always clear local state
+      setUser(null);
+      await clearAuthTokens();
     }
   };
 
@@ -189,11 +180,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
-        signInWithEmail,
-        signUpWithEmail,
-        signInWithGoogle,
-        signInWithApple,
-        signInWithGitHub,
+        signInWithEmailOTP,
+        verifyOTP,
+        verifyOTPWithRegistration,
+        signInWithBiometric,
         signOut,
         fetchUser,
       }}
