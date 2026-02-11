@@ -153,7 +153,7 @@ export default function AuthScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-          {/* Logo - 3x bigger */}
+          {/* Logo - reduced by 25% from 360x360 to 270x270 */}
           <View style={styles.logoContainer}>
             <Image
               source={require("@/assets/images/059418e5-7c72-45ad-9fa0-5a6f183d9999.png")}
@@ -189,7 +189,7 @@ export default function AuthScreen() {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Send Biometric Code</Text>
+                  <Text style={styles.primaryButtonText}>Biometric required</Text>
                 )}
               </TouchableOpacity>
 
@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   logo: {
-    width: 360,
-    height: 360,
+    width: 270,
+    height: 270,
   },
   title: {
     fontSize: 32,
