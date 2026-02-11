@@ -117,7 +117,9 @@ export default function RegisterScreen() {
 
   const loadCounties = async () => {
     try {
+      console.log("[Register] Loading counties...");
       const response = await authenticatedGet<County[]>("/api/locations/counties");
+      console.log("[Register] Counties loaded successfully:", response.length, "counties");
       setCounties(response);
     } catch (error) {
       console.error("[Register] Failed to load counties:", error);
@@ -126,9 +128,11 @@ export default function RegisterScreen() {
 
   const loadConstituencies = async (countyName: string) => {
     try {
+      console.log("[Register] Loading constituencies for county:", countyName);
       const response = await authenticatedGet<Constituency[]>(
         `/api/locations/constituencies/${encodeURIComponent(countyName)}`
       );
+      console.log("[Register] Constituencies loaded successfully:", response.length, "constituencies");
       setConstituencies(response);
       setConstituency("");
       setWard("");
@@ -139,9 +143,11 @@ export default function RegisterScreen() {
 
   const loadWards = async (constituencyName: string) => {
     try {
+      console.log("[Register] Loading wards for constituency:", constituencyName);
       const response = await authenticatedGet<Ward[]>(
         `/api/locations/wards/${encodeURIComponent(constituencyName)}`
       );
+      console.log("[Register] Wards loaded successfully:", response.length, "wards");
       setWards(response);
       setWard("");
     } catch (error) {
