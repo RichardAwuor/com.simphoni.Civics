@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Kenya Civic",
+    "slug": "Kenya Civic",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/1fbb36a8-69de-42c3-9897-9c31bba8dbe2.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/1fbb36a8-69de-42c3-9897-9c31bba8dbe2.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.Natively",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/1fbb36a8-69de-42c3-9897-9c31bba8dbe2.png",
+        "backgroundColor": "#000000"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.Natively"
+    },
+    "web": {
+      "favicon": "./assets/images/1fbb36a8-69de-42c3-9897-9c31bba8dbe2.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-router",
+      "expo-web-browser"
+    ],
+    "scheme": "Kenya Civic",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "backendUrl": "https://ym2m4q87zqt3sjjk5e2sv9sdftz3fafc.app.specular.dev"
+    }
+  }
+}
