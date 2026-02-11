@@ -85,10 +85,10 @@ export default function AuthScreen() {
       await signInWithEmailOTP(email);
       setSavedEmail(email);
       setMode("otp");
-      showModal("Success", "Verification code sent to your email", "success");
+      showModal("Success", "Biometric code sent to your email", "success");
     } catch (error: any) {
       console.error("[Auth] Failed to send OTP:", error);
-      showModal("Error", error.message || "Failed to send verification code. Please try again.", "error");
+      showModal("Error", error.message || "Failed to send biometric code. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -96,7 +96,7 @@ export default function AuthScreen() {
 
   const handleVerifyOTP = async () => {
     if (!otp || otp.length !== 6) {
-      showModal("Error", "Please enter the 6-digit verification code", "error");
+      showModal("Error", "Please enter the 6-digit biometric code", "error");
       return;
     }
 
@@ -104,11 +104,11 @@ export default function AuthScreen() {
     try {
       console.log("[Auth] Verifying OTP:", otp);
       await verifyOTP(savedEmail, otp);
-      showModal("Success", "Verification successful! Redirecting...", "success");
+      showModal("Success", "Biometric verification successful! Redirecting...", "success");
       // Auth context will handle redirect
     } catch (error: any) {
       console.error("[Auth] OTP verification failed:", error);
-      showModal("Error", error.message || "Invalid verification code. Please try again.", "error");
+      showModal("Error", error.message || "Invalid biometric code. Please try again.", "error");
       setOtp("");
     } finally {
       setLoading(false);
@@ -153,7 +153,7 @@ export default function AuthScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-          {/* Logo */}
+          {/* Logo - 3x bigger */}
           <View style={styles.logoContainer}>
             <Image
               source={require("@/assets/images/059418e5-7c72-45ad-9fa0-5a6f183d9999.png")}
@@ -168,7 +168,7 @@ export default function AuthScreen() {
           {mode === "email" && (
             <>
               <Text style={styles.instructionText}>
-                Enter your email to receive a verification code
+                Enter your email to receive a biometric code
               </Text>
 
               <TextInput
@@ -189,7 +189,7 @@ export default function AuthScreen() {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Send Verification Code</Text>
+                  <Text style={styles.primaryButtonText}>Send Biometric Code</Text>
                 )}
               </TouchableOpacity>
 
@@ -218,7 +218,7 @@ export default function AuthScreen() {
           {mode === "otp" && (
             <>
               <Text style={styles.instructionText}>
-                Enter the 6-digit code sent to {savedEmail}
+                Enter the 6-digit biometric code sent to {savedEmail}
               </Text>
 
               <TextInput
@@ -239,7 +239,7 @@ export default function AuthScreen() {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Verify Code</Text>
+                  <Text style={styles.primaryButtonText}>Verify Biometric</Text>
                 )}
               </TouchableOpacity>
 
@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 360,
+    height: 360,
   },
   title: {
     fontSize: 32,
