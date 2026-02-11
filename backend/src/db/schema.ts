@@ -13,7 +13,8 @@ export const agents = pgTable('agents', {
   dateOfBirth: date('date_of_birth').notNull(),
   nationalIdHash: text('national_id_hash').notNull(), // Encrypted 8-digit national ID
   civicCode: text('civic_code').notNull().unique(), // Format: COUNTYNAME-XXX-XXXX-XX
-  biometricEnabled: boolean('biometric_enabled').default(true).notNull(),
+  biometricEnabled: boolean('biometric_enabled').default(false).notNull(),
+  biometricPublicKey: text('biometric_public_key'), // Device's biometric credential identifier
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   userId: text('user_id').notNull(), // Foreign key to auth user (Better Auth)
 }, (table) => [
@@ -21,6 +22,21 @@ export const agents = pgTable('agents', {
   index('agents_civic_code_idx').on(table.civicCode),
   index('agents_user_id_idx').on(table.userId),
   index('agents_county_idx').on(table.county),
+  index('agents_biometric_public_key_idx').on(table.biometricPublicKey),
+]);
+
+// OTP codes table for passwordless authentication
+export const otpCodes = pgTable('otp_codes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull(),
+  code: text('code').notNull(), // 6-digit OTP
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  used: boolean('used').default(false).notNull(),
+}, (table) => [
+  index('otp_email_idx').on(table.email),
+  index('otp_used_idx').on(table.used),
+  index('otp_expires_idx').on(table.expiresAt),
 ]);
 
 // Incident videos table

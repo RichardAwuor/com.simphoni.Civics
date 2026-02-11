@@ -16,6 +16,7 @@ const registerAgentSchema = z.object({
   ward: z.string().min(1),
   dateOfBirth: z.string().date(),
   nationalId: z.string().regex(/^\d{8}$/, 'National ID must be 8 digits'),
+  biometricPublicKey: z.string().optional(), // Optional biometric credential
 });
 
 const updateAgentSchema = z.object({
@@ -168,6 +169,7 @@ export function registerAgentRoutes(app: App) {
             ward: { type: 'string' },
             dateOfBirth: { type: 'string' },
             nationalId: { type: 'string' },
+            biometricPublicKey: { type: 'string' },
           },
           required: ['email', 'confirmEmail', 'firstName', 'lastName', 'county', 'constituency', 'ward', 'dateOfBirth', 'nationalId'],
         },
@@ -236,6 +238,8 @@ export function registerAgentRoutes(app: App) {
             dateOfBirth: data.dateOfBirth,
             nationalIdHash,
             civicCode,
+            biometricEnabled: !!data.biometricPublicKey,
+            biometricPublicKey: data.biometricPublicKey || null,
             userId: session.user.id as string,
           })
           .returning();
