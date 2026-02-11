@@ -153,7 +153,7 @@ export default function AuthScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-          {/* Logo - reduced by 25% from 360x360 to 270x270 */}
+          {/* Logo - reduced spacing to Kenya Civic text */}
           <View style={styles.logoContainer}>
             <Image
               source={require("@/assets/images/059418e5-7c72-45ad-9fa0-5a6f183d9999.png")}
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 0,
   },
   logo: {
     width: 270,
