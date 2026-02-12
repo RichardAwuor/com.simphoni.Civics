@@ -153,10 +153,10 @@ export default function AuthScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-          {/* Logo - reduced spacing to Kenya Civic text */}
+          {/* Logo - Kenya Coat of Arms */}
           <View style={styles.logoContainer}>
             <Image
-              source={require("@/assets/images/059418e5-7c72-45ad-9fa0-5a6f183d9999.png")}
+              source={require("@/assets/images/35d1a834-3832-49a2-af52-ecb142a05ab5.png")}
               style={styles.logo}
               resizeMode="contain"
             />
