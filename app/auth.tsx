@@ -58,6 +58,11 @@ export default function AuthScreen() {
     }
   };
 
+  const handleNewRegistration = () => {
+    console.log("[Auth] User tapped New Agent Registration button");
+    router.push("/(tabs)/register");
+  };
+
   if (authLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -212,6 +217,24 @@ export default function AuthScreen() {
                   </TouchableOpacity>
                 </>
               )}
+
+              {/* New Agent Registration Button */}
+              <View style={styles.registrationSection}>
+                <View style={styles.divider}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>New Agent?</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.registrationButton}
+                  onPress={handleNewRegistration}
+                >
+                  <Text style={styles.registrationButtonText}>
+                    New Agent Registration
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </>
           )}
 
@@ -397,6 +420,23 @@ const styles = StyleSheet.create({
   biometricButtonText: {
     fontSize: 16,
     color: "#007AFF",
+    fontWeight: "600",
+  },
+  registrationSection: {
+    marginTop: 16,
+  },
+  registrationButton: {
+    height: 50,
+    borderWidth: 2,
+    borderColor: "#34C759",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  registrationButtonText: {
+    fontSize: 16,
+    color: "#34C759",
     fontWeight: "600",
   },
 });
