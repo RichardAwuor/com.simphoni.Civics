@@ -17,17 +17,16 @@ import { useRouter } from "expo-router";
 import * as LocalAuthentication from "expo-local-authentication";
 import CustomModal from "@/components/ui/Modal";
 
-type Mode = "email" | "otp" | "biometric";
+type Mode = "email" | "otp";
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { signInWithEmailOTP, verifyOTP, signInWithBiometric, loading: authLoading } = useAuth();
+  const { signInWithEmailOTP, verifyOTP, loading: authLoading } = useAuth();
 
   const [mode, setMode] = useState<Mode>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [savedEmail, setSavedEmail] = useState("");
   
   // Modal state
@@ -38,24 +37,9 @@ export default function AuthScreen() {
     type: "info" as "info" | "success" | "error",
   });
 
-  React.useEffect(() => {
-    checkBiometricAvailability();
-  }, []);
-
   const showModal = (title: string, message: string, type: "info" | "success" | "error") => {
     setModalConfig({ title, message, type });
     setModalVisible(true);
-  };
-
-  const checkBiometricAvailability = async () => {
-    try {
-      const compatible = await LocalAuthentication.hasHardwareAsync();
-      const enrolled = await LocalAuthentication.isEnrolledAsync();
-      setBiometricAvailable(compatible && enrolled);
-      console.log("[Auth] Biometric available:", compatible && enrolled);
-    } catch (error) {
-      console.error("[Auth] Error checking biometric availability:", error);
-    }
   };
 
   const handleNewRegistration = () => {
@@ -120,37 +104,6 @@ export default function AuthScreen() {
     }
   };
 
-  const handleBiometricAuth = async () => {
-    if (!email) {
-      showModal("Error", "Please enter your email address first", "error");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      console.log("[Auth] Attempting biometric authentication for:", email);
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: "Authenticate to sign in",
-        fallbackLabel: "Use passcode",
-        disableDeviceFallback: false,
-      });
-
-      if (result.success) {
-        console.log("[Auth] Biometric authentication successful");
-        await signInWithBiometric(email);
-        showModal("Success", "Biometric authentication successful!", "success");
-      } else {
-        console.log("[Auth] Biometric authentication failed or cancelled");
-        showModal("Error", "Biometric authentication was cancelled", "error");
-      }
-    } catch (error: any) {
-      console.error("[Auth] Biometric auth failed:", error);
-      showModal("Error", error.message || "Biometric authentication failed. Please try email verification.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -161,7 +114,7 @@ export default function AuthScreen() {
           {/* Logo - Kenya Civic with decorative border */}
           <View style={styles.logoContainer}>
             <Image
-              source={require("@/assets/images/26c440b8-a573-4ca1-b10c-79e889cc6cca.png")}
+              source={require("@/assets/images/1785992f-1ec2-4e67-9ef0-aceaaaffa493.png")}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -197,26 +150,6 @@ export default function AuthScreen() {
                   <Text style={styles.primaryButtonText}>Biometric required</Text>
                 )}
               </TouchableOpacity>
-
-              {biometricAvailable && (
-                <>
-                  <View style={styles.divider}>
-                    <View style={styles.dividerLine} />
-                    <Text style={styles.dividerText}>or</Text>
-                    <View style={styles.dividerLine} />
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.biometricButton}
-                    onPress={handleBiometricAuth}
-                    disabled={loading || !email}
-                  >
-                    <Text style={styles.biometricButtonText}>
-                      Sign in with Fingerprint
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
 
               {/* New Agent Registration Button */}
               <View style={styles.registrationSection}>
@@ -407,20 +340,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     color: "#666",
     fontSize: 14,
-  },
-  biometricButton: {
-    height: 50,
-    borderWidth: 2,
-    borderColor: "#007AFF",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  biometricButtonText: {
-    fontSize: 16,
-    color: "#007AFF",
-    fontWeight: "600",
   },
   registrationSection: {
     marginTop: 16,

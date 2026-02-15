@@ -9,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@react-navigation/native";
@@ -94,12 +95,15 @@ export default function RegisterScreen() {
   useEffect(() => {
     if (county) {
       loadConstituencies(county);
+      setConstituency("");
+      setWard("");
     }
   }, [county]);
 
   useEffect(() => {
     if (constituency) {
       loadWards(constituency);
+      setWard("");
     }
   }, [constituency]);
 
@@ -138,8 +142,6 @@ export default function RegisterScreen() {
       );
       console.log("[Register] Constituencies loaded successfully:", response.length, "constituencies");
       setConstituencies(response);
-      setConstituency("");
-      setWard("");
     } catch (error) {
       console.error("[Register] Failed to load constituencies:", error);
     }
@@ -153,7 +155,6 @@ export default function RegisterScreen() {
       );
       console.log("[Register] Wards loaded successfully:", response.length, "wards");
       setWards(response);
-      setWard("");
     } catch (error) {
       console.error("[Register] Failed to load wards:", error);
     }
@@ -176,8 +177,19 @@ export default function RegisterScreen() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showModal("Error", "Please enter a valid email address", "error");
+      return;
+    }
+
     if (nationalId.length !== 8) {
       showModal("Error", "National ID must be 8 digits", "error");
+      return;
+    }
+
+    if (!/^\d{8}$/.test(nationalId)) {
+      showModal("Error", "National ID must contain only numbers", "error");
       return;
     }
 
@@ -202,8 +214,15 @@ export default function RegisterScreen() {
       if (response.success) {
         setAgent(response.agent);
         console.log("[Register] Registration successful, moving to biometric setup");
+        showModal(
+          "Success",
+          `Registration successful! Your Civic Code is: ${response.agent.civicCode}`,
+          "success"
+        );
         // Move to biometric setup step
-        setRegistrationStep("biometric");
+        setTimeout(() => {
+          setRegistrationStep("biometric");
+        }, 2000);
       }
     } catch (error: any) {
       console.error("[Register] Registration failed:", error);
@@ -232,7 +251,7 @@ export default function RegisterScreen() {
     setRegistrationStep("complete");
     showModal(
       "Success",
-      `Registration complete! Your Civic Code is: ${agent?.civicCode}`,
+      "Biometric setup complete! You can now sign in with your fingerprint.",
       "success"
     );
     setTimeout(() => {
@@ -241,8 +260,8 @@ export default function RegisterScreen() {
   };
 
   const handleBiometricSkip = () => {
-    console.log("[Register] User skipped biometric setup");
-    handleBiometricComplete(null);
+    console.log("[Register] User cannot skip biometric setup - it is required");
+    showModal("Required", "Biometric setup is required to complete registration", "error");
   };
 
   if (checkingAgent) {
@@ -272,6 +291,19 @@ export default function RegisterScreen() {
   if (registrationStep === "biometric" && agent) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+        <View style={styles.biometricHeader}>
+          <Image
+            source={require("@/assets/images/1785992f-1ec2-4e67-9ef0-aceaaaffa493.png")}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          <Text style={[styles.biometricTitle, { color: theme.colors.text }]}>
+            Set Fingerprint
+          </Text>
+          <Text style={[styles.biometricSubtitle, { color: theme.dark ? "#98989D" : "#666" }]}>
+            Required to log into the app
+          </Text>
+        </View>
         <BiometricSetup
           email={agent.email}
           onComplete={handleBiometricComplete}
@@ -291,7 +323,15 @@ export default function RegisterScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Agent Registration</Text>
+        <View style={styles.header}>
+          <Image
+            source={require("@/assets/images/1785992f-1ec2-4e67-9ef0-aceaaaffa493.png")}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+        </View>
+
+        <Text style={[styles.title, { color: theme.colors.text }]}>New Agent Registration</Text>
         <Text style={[styles.subtitle, { color: theme.dark ? "#98989D" : "#666" }]}>
           WANJIKU@63
         </Text>
@@ -405,7 +445,7 @@ export default function RegisterScreen() {
             />
           )}
 
-          <Text style={[styles.label, { color: theme.colors.text }]}>National ID (8 digits) *</Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>8-Digit National ID Number *</Text>
           <TextInput
             style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
             placeholder="Enter 8-digit National ID"
@@ -415,6 +455,9 @@ export default function RegisterScreen() {
             keyboardType="number-pad"
             maxLength={8}
           />
+          <Text style={[styles.helperText, { color: theme.dark ? "#98989D" : "#666" }]}>
+            Will be encrypted and replaced with auto-generated Civic Code
+          </Text>
 
           <TouchableOpacity
             style={[styles.registerButton, { backgroundColor: theme.colors.primary }]}
@@ -424,7 +467,7 @@ export default function RegisterScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.registerButtonText}>Continue to Biometric Setup</Text>
+              <Text style={styles.registerButtonText}>Continue to Fingerprint Setup</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -466,6 +509,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
   },
+  header: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  headerLogo: {
+    width: 120,
+    height: 120,
+  },
   title: {
     fontSize: 28,
     fontWeight: "bold",
@@ -475,6 +526,20 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     marginBottom: 24,
+    textAlign: "center",
+  },
+  biometricHeader: {
+    alignItems: "center",
+    padding: 20,
+  },
+  biometricTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  biometricSubtitle: {
+    fontSize: 16,
     textAlign: "center",
   },
   form: {
@@ -492,6 +557,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     justifyContent: "center",
+  },
+  helperText: {
+    fontSize: 12,
+    marginTop: -8,
+    fontStyle: "italic",
   },
   pickerContainer: {
     borderWidth: 1,
