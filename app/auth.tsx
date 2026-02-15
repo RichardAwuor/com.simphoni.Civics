@@ -158,10 +158,10 @@ export default function AuthScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-          {/* Logo - Kenya Coat of Arms with decorative border */}
+          {/* Logo - Kenya Civic with decorative border */}
           <View style={styles.logoContainer}>
             <Image
-              source={require("@/assets/images/5bf782f3-ecc1-4a50-a037-3e421d3e172c.png")}
+              source={require("@/assets/images/26c440b8-a573-4ca1-b10c-79e889cc6cca.png")}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -173,7 +173,7 @@ export default function AuthScreen() {
           {mode === "email" && (
             <>
               <Text style={styles.instructionText}>
-                Enter your email to receive a biometric code
+                Enter your email to match set biometric
               </Text>
 
               <TextInput
