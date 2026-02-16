@@ -121,6 +121,7 @@ export function registerAuthRoutes(app: App) {
             'Biometric verification failed - credential not found or not enabled'
           );
           return reply.status(401).send({
+            success: false,
             error: 'Biometric verification failed',
           });
         }
@@ -159,6 +160,7 @@ export function registerAuthRoutes(app: App) {
         );
 
         return {
+          success: true,
           token: sessionToken,
           user: {
             id: agent.id,
