@@ -2,6 +2,7 @@ import type { App } from '../index.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema.js';
+import * as authSchema from '../db/auth-schema.js';
 import { z } from 'zod';
 import crypto from 'crypto';
 
@@ -150,7 +151,7 @@ async function generateCivicCode(
 export function registerAgentRoutes(app: App) {
   const requireAuth = app.requireAuth();
 
-  // Register new agent
+  // Register new agent (no authentication required - direct registration with immediate token)
   app.fastify.post<{ Body: z.infer<typeof registerAgentSchema> }>(
     '/api/agents/register',
     {
@@ -176,11 +177,8 @@ export function registerAgentRoutes(app: App) {
       },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const session = await requireAuth(request, reply);
-      if (!session) return;
-
       app.logger.info(
-        { userId: session.user.id },
+        { email: (request.body as any).email },
         'Agent registration started'
       );
 
@@ -192,25 +190,25 @@ export function registerAgentRoutes(app: App) {
         if (data.email !== data.confirmEmail) {
           app.logger.warn(
             { email: data.email },
-            'Email confirmation mismatch'
+            'Email confirmation mismatch during registration'
           );
           return reply.status(400).send({
             error: 'Emails do not match',
           });
         }
 
-        // Check if agent already exists for this user
+        // Check if agent already exists with this email
         const existingAgent = await app.db.query.agents.findFirst({
-          where: eq(schema.agents.userId, session.user.id),
+          where: eq(schema.agents.email, data.email),
         });
 
         if (existingAgent) {
           app.logger.warn(
-            { userId: session.user.id },
-            'Agent already registered for user'
+            { email: data.email },
+            'Agent already registered with this email'
           );
           return reply.status(400).send({
-            error: 'You have already registered as an agent',
+            error: 'An agent is already registered with this email',
           });
         }
 
@@ -225,7 +223,29 @@ export function registerAgentRoutes(app: App) {
           data.ward
         );
 
-        // Create agent record
+        // Create a Better Auth user account directly
+        const userId = `user_${crypto.randomBytes(16).toString('hex')}`;
+
+        try {
+          await app.db
+            .insert(authSchema.user)
+            .values({
+              id: userId,
+              name: `${data.firstName} ${data.lastName}`,
+              email: data.email,
+              emailVerified: false,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+        } catch (userError) {
+          app.logger.warn(
+            { email: data.email, err: userError },
+            'User already exists in Better Auth'
+          );
+          // User might already exist, continue with agent creation
+        }
+
+        // Create agent record with the new user ID
         const agent = await app.db
           .insert(schema.agents)
           .values({
@@ -240,26 +260,59 @@ export function registerAgentRoutes(app: App) {
             civicCode,
             biometricEnabled: !!data.biometricPublicKey,
             biometricPublicKey: data.biometricPublicKey || null,
-            userId: session.user.id as string,
+            userId,
           })
           .returning();
 
         app.logger.info(
-          { agentId: agent[0].id, civicCode: agent[0].civicCode },
-          'Agent registered successfully'
+          { agentId: agent[0].id, civicCode: agent[0].civicCode, email: data.email },
+          'Agent registered successfully with immediate token'
         );
 
+        // Create a Better Auth session token
+        const sessionId = `session_${crypto.randomBytes(16).toString('hex')}`;
+        const sessionToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+        try {
+          await app.db
+            .insert(authSchema.session)
+            .values({
+              id: sessionId,
+              token: sessionToken,
+              expiresAt,
+              userId,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              ipAddress: request.ip,
+              userAgent: request.headers['user-agent'] || null,
+            });
+        } catch (sessionError) {
+          app.logger.error(
+            { err: sessionError, email: data.email },
+            'Failed to create session'
+          );
+          return reply.status(500).send({
+            error: 'Failed to create session',
+          });
+        }
+
+        const token = sessionToken;
+
         return {
+          success: true,
           agent: {
             id: agent[0].id,
             civicCode: agent[0].civicCode,
             firstName: agent[0].firstName,
             lastName: agent[0].lastName,
+            email: agent[0].email,
             county: agent[0].county,
             constituency: agent[0].constituency,
             ward: agent[0].ward,
+            dateOfBirth: agent[0].dateOfBirth,
           },
-          success: true,
+          token,
         };
       } catch (error) {
         app.logger.error(

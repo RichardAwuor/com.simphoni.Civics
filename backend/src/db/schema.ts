@@ -25,20 +25,6 @@ export const agents = pgTable('agents', {
   index('agents_biometric_public_key_idx').on(table.biometricPublicKey),
 ]);
 
-// OTP codes table for passwordless authentication
-export const otpCodes = pgTable('otp_codes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: text('email').notNull(),
-  code: text('code').notNull(), // 6-digit OTP
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  used: boolean('used').default(false).notNull(),
-}, (table) => [
-  index('otp_email_idx').on(table.email),
-  index('otp_used_idx').on(table.used),
-  index('otp_expires_idx').on(table.expiresAt),
-]);
-
 // Incident videos table
 export const incidentVideos = pgTable('incident_videos', {
   id: uuid('id').primaryKey().defaultRandom(),
