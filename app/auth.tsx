@@ -73,7 +73,7 @@ export default function AuthScreen() {
           {/* Logo - Kenya Civic with decorative border */}
           <View style={styles.logoContainer}>
             <Image
-              source={require("@/assets/images/c7abb91d-37b9-4e4b-9693-6f0e4d805d93.png")}
+              source={require("@/assets/images/14f8f728-c617-420d-a9ca-dd6f305413d6.png")}
               style={styles.logo}
               resizeMode="contain"
             />
