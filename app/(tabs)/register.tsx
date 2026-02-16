@@ -16,7 +16,7 @@ import { useTheme } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "@/contexts/AuthContext";
-import { authenticatedGet, authenticatedPost } from "@/utils/api";
+import { apiGet, apiPost } from "@/utils/api";
 import CustomModal from "@/components/ui/Modal";
 import BiometricSetup from "@/components/BiometricSetup";
 import { useRouter } from "expo-router";
@@ -58,7 +58,6 @@ export default function RegisterScreen() {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
-  const [checkingAgent, setCheckingAgent] = useState(true);
   const [agent, setAgent] = useState<Agent | null>(null);
   const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("form");
 
@@ -88,7 +87,6 @@ export default function RegisterScreen() {
   });
 
   useEffect(() => {
-    checkExistingAgent();
     loadCounties();
   }, []);
 
@@ -107,56 +105,43 @@ export default function RegisterScreen() {
     }
   }, [constituency]);
 
-  const checkExistingAgent = async () => {
-    try {
-      setCheckingAgent(true);
-      const response = await authenticatedGet<Agent>("/api/agents/me");
-      if (response) {
-        setAgent(response);
-        // If agent exists, redirect to home
-        router.replace("/(tabs)/(home)/");
-      }
-    } catch (error: any) {
-      console.log("[Register] No existing agent found, showing registration form");
-    } finally {
-      setCheckingAgent(false);
-    }
-  };
-
   const loadCounties = async () => {
     try {
       console.log("[Register] Loading counties...");
-      const response = await authenticatedGet<County[]>("/api/locations/counties");
+      const response = await apiGet<County[]>("/api/locations/counties");
       console.log("[Register] Counties loaded successfully:", response.length, "counties");
       setCounties(response);
     } catch (error) {
       console.error("[Register] Failed to load counties:", error);
+      showModal("Error", "Failed to load counties. Please try again.", "error");
     }
   };
 
   const loadConstituencies = async (countyName: string) => {
     try {
       console.log("[Register] Loading constituencies for county:", countyName);
-      const response = await authenticatedGet<Constituency[]>(
+      const response = await apiGet<Constituency[]>(
         `/api/locations/constituencies/${encodeURIComponent(countyName)}`
       );
       console.log("[Register] Constituencies loaded successfully:", response.length, "constituencies");
       setConstituencies(response);
     } catch (error) {
       console.error("[Register] Failed to load constituencies:", error);
+      showModal("Error", "Failed to load constituencies. Please try again.", "error");
     }
   };
 
   const loadWards = async (constituencyName: string) => {
     try {
       console.log("[Register] Loading wards for constituency:", constituencyName);
-      const response = await authenticatedGet<Ward[]>(
+      const response = await apiGet<Ward[]>(
         `/api/locations/wards/${encodeURIComponent(constituencyName)}`
       );
       console.log("[Register] Wards loaded successfully:", response.length, "wards");
       setWards(response);
     } catch (error) {
       console.error("[Register] Failed to load wards:", error);
+      showModal("Error", "Failed to load wards. Please try again.", "error");
     }
   };
 
@@ -196,7 +181,7 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       console.log("[Register] Submitting registration form");
-      const response = await authenticatedPost<{ agent: Agent; success: boolean }>(
+      const response = await apiPost<{ agent: Agent; success: boolean }>(
         "/api/agents/register",
         {
           email,
@@ -236,7 +221,7 @@ export default function RegisterScreen() {
     if (biometricPublicKey && agent) {
       try {
         console.log("[Register] Registering biometric credential");
-        await authenticatedPost("/api/biometric/register", {
+        await apiPost("/api/biometric/register", {
           email: agent.email,
           biometricPublicKey,
         });
@@ -255,7 +240,7 @@ export default function RegisterScreen() {
       "success"
     );
     setTimeout(() => {
-      router.replace("/(tabs)/(home)/");
+      router.replace("/auth");
     }, 2000);
   };
 
@@ -263,17 +248,6 @@ export default function RegisterScreen() {
     console.log("[Register] User cannot skip biometric setup - it is required");
     showModal("Required", "Biometric setup is required to complete registration", "error");
   };
-
-  if (checkingAgent) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.text }]}>
-          Checking registration status...
-        </Text>
-      </View>
-    );
-  }
 
   if (agent && registrationStep === "complete") {
     return (
@@ -293,7 +267,7 @@ export default function RegisterScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
         <View style={styles.biometricHeader}>
           <Image
-            source={require("@/assets/images/1785992f-1ec2-4e67-9ef0-aceaaaffa493.png")}
+            source={require("@/assets/images/d8b57700-6b85-43a6-9b94-d3810c5a9213.png")}
             style={styles.headerLogo}
             resizeMode="contain"
           />
@@ -325,7 +299,7 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Image
-            source={require("@/assets/images/1785992f-1ec2-4e67-9ef0-aceaaaffa493.png")}
+            source={require("@/assets/images/d8b57700-6b85-43a6-9b94-d3810c5a9213.png")}
             style={styles.headerLogo}
             resizeMode="contain"
           />
