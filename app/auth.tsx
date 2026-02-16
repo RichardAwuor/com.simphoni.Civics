@@ -15,18 +15,15 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import CustomModal from "@/components/ui/Modal";
-
-type Mode = "email" | "otp";
+import { authClient } from "@/lib/auth";
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { signInWithEmailOTP, verifyOTP, loading: authLoading } = useAuth();
+  const { signInWithBiometric, loading: authLoading } = useAuth();
 
-  const [mode, setMode] = useState<Mode>("email");
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [savedEmail, setSavedEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
   
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
@@ -46,7 +43,7 @@ export default function AuthScreen() {
     router.push("/(tabs)/register");
   };
 
-  const handleSendOTP = async () => {
+  const handleSignInWithEmail = async () => {
     if (!email) {
       showModal("Error", "Please enter your email address", "error");
       return;
@@ -61,35 +58,43 @@ export default function AuthScreen() {
 
     setLoading(true);
     try {
-      console.log("[Auth] Sending OTP to email:", email);
-      await signInWithEmailOTP(email);
-      setSavedEmail(email);
-      setMode("otp");
-      showModal("Success", "Biometric code sent to your email", "success");
+      console.log("[Auth] Sending magic link to email:", email);
+      await authClient.signIn.email({
+        email,
+        callbackURL: "/auth-callback",
+      });
+      setEmailSent(true);
+      showModal("Success", "Check your email for a sign-in link", "success");
     } catch (error: any) {
-      console.error("[Auth] Failed to send OTP:", error);
-      showModal("Error", error.message || "Failed to send biometric code. Please try again.", "error");
+      console.error("[Auth] Failed to send magic link:", error);
+      showModal("Error", error.message || "Failed to send sign-in link. Please try again.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyOTP = async () => {
-    if (!otp || otp.length !== 6) {
-      showModal("Error", "Please enter the 6-digit biometric code", "error");
+  const handleBiometricSignIn = async () => {
+    if (!email) {
+      showModal("Error", "Please enter your email address", "error");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showModal("Error", "Please enter a valid email address", "error");
       return;
     }
 
     setLoading(true);
     try {
-      console.log("[Auth] Verifying OTP:", otp);
-      await verifyOTP(savedEmail, otp);
-      showModal("Success", "Biometric verification successful! Redirecting...", "success");
+      console.log("[Auth] Signing in with biometric for:", email);
+      await signInWithBiometric(email);
+      showModal("Success", "Biometric sign-in successful!", "success");
       // Auth context will handle redirect
     } catch (error: any) {
-      console.error("[Auth] OTP verification failed:", error);
-      showModal("Error", error.message || "Invalid biometric code. Please try again.", "error");
-      setOtp("");
+      console.error("[Auth] Biometric sign-in failed:", error);
+      showModal("Error", error.message || "Biometric sign-in failed. Please try email sign-in or register first.", "error");
     } finally {
       setLoading(false);
     }
@@ -122,10 +127,22 @@ export default function AuthScreen() {
           <Text style={styles.title}>Kenya Civic</Text>
           <Text style={styles.subtitle}>WANJIKU@63</Text>
 
-          {mode === "email" && (
+          {emailSent ? (
             <>
               <Text style={styles.instructionText}>
-                Enter your email to match set biometric
+                Check your email for a sign-in link. Click the link to complete authentication.
+              </Text>
+              <TouchableOpacity
+                style={styles.switchModeButton}
+                onPress={() => setEmailSent(false)}
+              >
+                <Text style={styles.switchModeText}>Use a different email</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={styles.instructionText}>
+                Sign in with your email or biometric
               </Text>
 
               <TextInput
@@ -140,14 +157,22 @@ export default function AuthScreen() {
 
               <TouchableOpacity
                 style={[styles.primaryButton, loading && styles.buttonDisabled]}
-                onPress={handleSendOTP}
+                onPress={handleBiometricSignIn}
                 disabled={loading}
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Biometric required</Text>
+                  <Text style={styles.primaryButtonText}>Sign In with Biometric</Text>
                 )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.secondaryButton, loading && styles.buttonDisabled]}
+                onPress={handleSignInWithEmail}
+                disabled={loading}
+              >
+                <Text style={styles.secondaryButtonText}>Sign In with Email Link</Text>
               </TouchableOpacity>
 
               {/* New Agent Registration Section */}
@@ -167,54 +192,6 @@ export default function AuthScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </>
-          )}
-
-          {mode === "otp" && (
-            <>
-              <Text style={styles.instructionText}>
-                Enter the 6-digit biometric code sent to {savedEmail}
-              </Text>
-
-              <TextInput
-                style={styles.otpInput}
-                placeholder="000000"
-                value={otp}
-                onChangeText={setOtp}
-                keyboardType="number-pad"
-                maxLength={6}
-                autoFocus
-              />
-
-              <TouchableOpacity
-                style={[styles.primaryButton, loading && styles.buttonDisabled]}
-                onPress={handleVerifyOTP}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>Verify Biometric</Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.switchModeButton}
-                onPress={() => {
-                  setMode("email");
-                  setOtp("");
-                }}
-              >
-                <Text style={styles.switchModeText}>Use a different email</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.switchModeButton}
-                onPress={handleSendOTP}
-                disabled={loading}
-              >
-                <Text style={styles.switchModeText}>Resend code</Text>
-              </TouchableOpacity>
             </>
           )}
         </View>
@@ -288,19 +265,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: "#fff",
   },
-  otpInput: {
-    height: 60,
-    borderWidth: 2,
-    borderColor: "#007AFF",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    fontSize: 32,
-    backgroundColor: "#fff",
-    textAlign: "center",
-    letterSpacing: 8,
-    fontWeight: "600",
-  },
   primaryButton: {
     height: 50,
     backgroundColor: "#FF3B30",
@@ -310,6 +274,19 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   primaryButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    height: 50,
+    backgroundColor: "#007AFF",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  secondaryButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",

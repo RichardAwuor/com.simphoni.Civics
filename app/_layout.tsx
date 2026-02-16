@@ -5,7 +5,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme, View, ActivityIndicator } from "react-native";
+import { useColorScheme, View, ActivityIndicator, Platform } from "react-native";
 import { useNetworkState } from "expo-network";
 import {
   DarkTheme,
@@ -51,7 +51,38 @@ function RootLayoutNav() {
     
     setCheckingAgent(true);
     try {
-      const { authenticatedGet } = await import("@/utils/api");
+      const { authenticatedGet, authenticatedPost } = await import("@/utils/api");
+      
+      // Check if there's pending registration data
+      let pendingRegistration = null;
+      if (Platform.OS === "web") {
+        const data = localStorage.getItem("pending_registration");
+        if (data) {
+          pendingRegistration = JSON.parse(data);
+          localStorage.removeItem("pending_registration");
+        }
+      } else {
+        const SecureStore = await import("expo-secure-store");
+        const data = await SecureStore.default.getItemAsync("pending_registration");
+        if (data) {
+          pendingRegistration = JSON.parse(data);
+          await SecureStore.default.deleteItemAsync("pending_registration");
+        }
+      }
+
+      // If there's pending registration, complete it now
+      if (pendingRegistration) {
+        console.log("[Layout] Completing pending registration for:", pendingRegistration.email);
+        try {
+          const response = await authenticatedPost("/api/agents/register", pendingRegistration);
+          console.log("[Layout] Agent registration completed:", response);
+          // Continue to check agent status below
+        } catch (error) {
+          console.error("[Layout] Failed to complete registration:", error);
+          // Still try to check if agent exists
+        }
+      }
+
       const agent = await authenticatedGet("/api/agents/me");
       if (agent) {
         // Agent is registered, go to home

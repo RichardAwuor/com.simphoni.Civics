@@ -3,7 +3,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Platform } from "react-native";
 import * as Linking from "expo-linking";
 import * as SecureStore from "expo-secure-store";
-import { authClient, setBearerToken, clearAuthTokens, BEARER_TOKEN_KEY } from "@/lib/auth";
+import { authClient, setBearerToken, clearAuthTokens, BEARER_TOKEN_KEY, storeBiometricKey, getBiometricKey } from "@/lib/auth";
+import * as LocalAuthentication from "expo-local-authentication";
 
 interface User {
   id: string;
@@ -12,12 +13,23 @@ interface User {
   image?: string;
 }
 
+interface Agent {
+  id: string;
+  civicCode: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  county: string;
+  constituency: string;
+  ward: string;
+  dateOfBirth: string;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signInWithEmailOTP: (email: string) => Promise<void>;
-  verifyOTP: (email: string, otp: string) => Promise<void>;
-  verifyOTPWithRegistration: (email: string, otp: string, registrationData: any) => Promise<void>;
+  registerAgent: (registrationData: any) => Promise<{ agent: Agent; success: boolean }>;
+  registerBiometric: (email: string, biometricPublicKey: string) => Promise<void>;
   signInWithBiometric: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -72,57 +84,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signInWithEmailOTP = async (email: string) => {
+  const registerAgent = async (registrationData: any): Promise<{ agent: Agent; success: boolean }> => {
     try {
-      console.log("[AuthContext] Sending OTP to:", email);
-      const { apiPost } = await import("@/utils/api");
-      await apiPost("/api/auth/request-otp", { email });
-      console.log("[AuthContext] OTP sent successfully");
+      console.log("[AuthContext] Registering agent:", registrationData.email);
+      const { authenticatedPost } = await import("@/utils/api");
+      
+      const response = await authenticatedPost<{ agent: Agent; success: boolean }>(
+        "/api/agents/register",
+        registrationData
+      );
+      
+      console.log("[AuthContext] Agent registered successfully:", response.agent.civicCode);
+      return response;
     } catch (error) {
-      console.error("[AuthContext] Failed to send OTP:", error);
+      console.error("[AuthContext] Agent registration failed:", error);
       throw error;
     }
   };
 
-  const verifyOTP = async (email: string, otp: string) => {
+  const registerBiometric = async (email: string, biometricPublicKey: string) => {
     try {
-      console.log("[AuthContext] Verifying OTP for:", email);
+      console.log("[AuthContext] Registering biometric credential for:", email);
       const { apiPost } = await import("@/utils/api");
-      const response = await apiPost<{ token: string; user: User }>("/api/auth/verify-otp", {
+      
+      await apiPost("/api/biometric/register", {
         email,
-        code: otp,
+        biometricPublicKey,
       });
       
-      if (response.token) {
-        await setBearerToken(response.token);
-        console.log("[AuthContext] OTP verified, token saved");
-      }
+      // Store locally for future sign-ins
+      await storeBiometricKey(email, biometricPublicKey);
       
-      await fetchUser();
+      console.log("[AuthContext] Biometric credential registered successfully");
     } catch (error) {
-      console.error("[AuthContext] OTP verification failed:", error);
-      throw error;
-    }
-  };
-
-  const verifyOTPWithRegistration = async (email: string, otp: string, registrationData: any) => {
-    try {
-      console.log("[AuthContext] Verifying OTP with registration data for:", email);
-      const { apiPost } = await import("@/utils/api");
-      const response = await apiPost<{ token: string; user: User }>("/api/auth/verify-otp", {
-        email,
-        code: otp,
-        ...registrationData,
-      });
-      
-      if (response.token) {
-        await setBearerToken(response.token);
-        console.log("[AuthContext] OTP verified with registration, token saved");
-      }
-      
-      await fetchUser();
-    } catch (error) {
-      console.error("[AuthContext] OTP verification with registration failed:", error);
+      console.error("[AuthContext] Biometric registration failed:", error);
       throw error;
     }
   };
@@ -131,32 +126,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("[AuthContext] Signing in with biometric for:", email);
       
-      // Get the stored biometric public key for this email
-      const storageKey = `biometric_key_${email}`;
-      let biometricPublicKey: string | null = null;
-      
-      if (Platform.OS === "web") {
-        biometricPublicKey = localStorage.getItem(storageKey);
-      } else {
-        biometricPublicKey = await SecureStore.getItemAsync(storageKey);
+      // Authenticate with device biometric first
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Sign in with biometric",
+        fallbackLabel: "Use passcode",
+        disableDeviceFallback: false,
+      });
+
+      if (!result.success) {
+        throw new Error("Biometric authentication failed");
       }
+      
+      // Get the stored biometric public key for this email
+      const biometricPublicKey = await getBiometricKey(email);
 
       if (!biometricPublicKey) {
-        throw new Error("No biometric credential found for this email");
+        throw new Error("No biometric credential found for this email. Please register first.");
       }
 
       const { apiPost } = await import("@/utils/api");
-      const response = await apiPost<{ token: string; user: User }>("/api/biometric/verify", {
+      const response = await apiPost<{ success: boolean; agentId: string; civicCode: string; email: string }>("/api/biometric/verify", {
         email,
         biometricPublicKey,
       });
       
-      if (response.token) {
-        await setBearerToken(response.token);
-        console.log("[AuthContext] Biometric verification successful, token saved");
+      if (response.success) {
+        console.log("[AuthContext] Biometric verification successful");
+        // The backend doesn't return a token yet, so we need to use Better Auth
+        // to create a session. For now, we'll just fetch the user.
+        await fetchUser();
       }
-      
-      await fetchUser();
     } catch (error) {
       console.error("[AuthContext] Biometric sign in failed:", error);
       throw error;
@@ -180,9 +179,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
-        signInWithEmailOTP,
-        verifyOTP,
-        verifyOTPWithRegistration,
+        registerAgent,
+        registerBiometric,
         signInWithBiometric,
         signOut,
         fetchUser,

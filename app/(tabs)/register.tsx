@@ -55,11 +55,12 @@ type RegistrationStep = "form" | "biometric" | "complete";
 export default function RegisterScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [agent, setAgent] = useState<Agent | null>(null);
   const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("form");
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   // Form fields
   const [email, setEmail] = useState("");
@@ -88,7 +89,11 @@ export default function RegisterScreen() {
 
   useEffect(() => {
     loadCounties();
-  }, []);
+    // Check if user is authenticated
+    if (!authLoading && !user) {
+      setNeedsAuth(true);
+    }
+  }, [authLoading, user]);
 
   useEffect(() => {
     if (county) {
@@ -180,8 +185,56 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
+      // If user is not authenticated, send email magic link first
+      if (!user) {
+        console.log("[Register] User not authenticated, sending magic link to:", email);
+        const { authClient } = await import("@/lib/auth");
+        
+        await authClient.signIn.email({
+          email,
+          callbackURL: "/auth-callback",
+        });
+
+        showModal(
+          "Check Your Email",
+          "We've sent you a sign-in link. Please click the link in your email to continue registration.",
+          "info"
+        );
+
+        // Store registration data temporarily for after authentication
+        if (Platform.OS === "web") {
+          localStorage.setItem("pending_registration", JSON.stringify({
+            email,
+            confirmEmail,
+            firstName,
+            lastName,
+            county,
+            constituency,
+            ward,
+            dateOfBirth: dateOfBirth.toISOString().split("T")[0],
+            nationalId,
+          }));
+        } else {
+          const SecureStore = await import("expo-secure-store");
+          await SecureStore.default.setItemAsync("pending_registration", JSON.stringify({
+            email,
+            confirmEmail,
+            firstName,
+            lastName,
+            county,
+            constituency,
+            ward,
+            dateOfBirth: dateOfBirth.toISOString().split("T")[0],
+            nationalId,
+          }));
+        }
+        return;
+      }
+
+      // User is authenticated, proceed with registration
       console.log("[Register] Submitting registration form");
-      const response = await apiPost<{ agent: Agent; success: boolean }>(
+      const { authenticatedPost } = await import("@/utils/api");
+      const response = await authenticatedPost<{ agent: Agent; success: boolean }>(
         "/api/agents/register",
         {
           email,
@@ -218,29 +271,16 @@ export default function RegisterScreen() {
   };
 
   const handleBiometricComplete = async (biometricPublicKey: string | null) => {
-    if (biometricPublicKey && agent) {
-      try {
-        console.log("[Register] Registering biometric credential");
-        await apiPost("/api/biometric/register", {
-          email: agent.email,
-          biometricPublicKey,
-        });
-        console.log("[Register] Biometric registration successful");
-      } catch (error) {
-        console.error("[Register] Failed to register biometric:", error);
-        // Don't block registration if biometric fails
-      }
-    }
-
-    // Show success message and redirect
+    // Biometric registration is handled in BiometricSetup component
+    // Just show success and redirect
     setRegistrationStep("complete");
     showModal(
       "Success",
-      "Biometric setup complete! You can now sign in with your fingerprint.",
+      "Registration complete! You can now sign in with your biometric or email.",
       "success"
     );
     setTimeout(() => {
-      router.replace("/auth");
+      router.replace("/(tabs)/(home)/");
     }, 2000);
   };
 
@@ -309,6 +349,14 @@ export default function RegisterScreen() {
         <Text style={[styles.subtitle, { color: theme.dark ? "#98989D" : "#666" }]}>
           WANJIKU@63
         </Text>
+
+        {needsAuth && !user && (
+          <View style={[styles.infoBox, { backgroundColor: theme.colors.card, borderColor: theme.colors.primary }]}>
+            <Text style={[styles.infoText, { color: theme.colors.text }]}>
+              ℹ️ You'll receive an email link to verify your identity after submitting this form.
+            </Text>
+          </View>
+        )}
 
         <View style={styles.form}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Email *</Text>
@@ -556,5 +604,15 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+  },
+  infoBox: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  infoText: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

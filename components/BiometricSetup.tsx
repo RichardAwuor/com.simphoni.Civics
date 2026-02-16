@@ -68,6 +68,19 @@ export default function BiometricSetup({ email, onComplete, onSkip }: BiometricS
         // In production, this would be a secure key stored in the device's secure enclave
         const biometricPublicKey = `${email}_${Platform.OS}_${Date.now()}`;
         
+        // Register biometric with backend
+        try {
+          const { apiPost } = await import("@/utils/api");
+          await apiPost("/api/biometric/register", {
+            email,
+            biometricPublicKey,
+          });
+          console.log("[BiometricSetup] Biometric registered with backend");
+        } catch (error) {
+          console.error("[BiometricSetup] Failed to register biometric with backend:", error);
+          // Continue anyway - store locally
+        }
+        
         // Store the biometric key locally for future sign-ins
         const storageKey = `biometric_key_${email}`;
         if (Platform.OS === "web") {
