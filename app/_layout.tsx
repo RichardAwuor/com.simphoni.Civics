@@ -1,3 +1,4 @@
+
 import "react-native-reanimated";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
@@ -37,11 +38,21 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === "auth" || segments[0] === "auth-popup" || segments[0] === "auth-callback";
     const inRegisterScreen = segments[0] === "(tabs)" && segments[1] === "register";
 
+    console.log("[Layout] Navigation check - user:", !!user, "segments:", segments, "inRegisterScreen:", inRegisterScreen);
+
+    // Allow access to registration screen without authentication
+    if (inRegisterScreen) {
+      console.log("[Layout] User is on registration screen - allowing access");
+      return;
+    }
+
     if (!user && !inAuthGroup) {
-      // Redirect to auth if not authenticated
+      // Redirect to auth if not authenticated and not on registration
+      console.log("[Layout] No user and not in auth group - redirecting to /auth");
       router.replace("/auth");
     } else if (user && inAuthGroup) {
       // Check if agent is registered, then redirect appropriately
+      console.log("[Layout] User authenticated and in auth group - checking agent registration");
       checkAgentRegistration();
     }
   }, [user, loading, segments]);
@@ -86,10 +97,12 @@ function RootLayoutNav() {
       const agent = await authenticatedGet("/api/agents/me");
       if (agent) {
         // Agent is registered, go to home
+        console.log("[Layout] Agent found - redirecting to home");
         router.replace("/(tabs)/(home)/");
       }
     } catch (error) {
       // Agent not registered, go to registration
+      console.log("[Layout] Agent not found - redirecting to registration");
       router.replace("/(tabs)/register");
     } finally {
       setCheckingAgent(false);
