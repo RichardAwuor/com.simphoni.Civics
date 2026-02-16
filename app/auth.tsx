@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
-import * as LocalAuthentication from "expo-local-authentication";
 import CustomModal from "@/components/ui/Modal";
 
 type Mode = "email" | "otp";
@@ -43,17 +42,9 @@ export default function AuthScreen() {
   };
 
   const handleNewRegistration = () => {
-    console.log("[Auth] User tapped New Agent Registration button");
+    console.log("[Auth] User tapped New Agent Registration button - navigating to register screen");
     router.push("/(tabs)/register");
   };
-
-  if (authLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
 
   const handleSendOTP = async () => {
     if (!email) {
@@ -104,6 +95,14 @@ export default function AuthScreen() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -151,7 +150,7 @@ export default function AuthScreen() {
                 )}
               </TouchableOpacity>
 
-              {/* New Agent Registration Button */}
+              {/* New Agent Registration Section */}
               <View style={styles.registrationSection}>
                 <View style={styles.divider}>
                   <View style={styles.dividerLine} />
