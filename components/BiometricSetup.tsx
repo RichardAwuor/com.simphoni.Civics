@@ -11,6 +11,7 @@ import {
 import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
 import { IconSymbol } from "@/components/IconSymbol";
+import { setLastUsedEmail } from "@/contexts/AuthContext";
 
 interface BiometricSetupProps {
   email: string;
@@ -20,8 +21,8 @@ interface BiometricSetupProps {
 
 export default function BiometricSetup({ email, onComplete, onSkip }: BiometricSetupProps) {
   const [loading, setLoading] = useState(false);
-  const [biometricType, setBiometricType] = useState<string>("fingerprint");
-  const [isAvailable, setIsAvailable] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState<string>("");
 
   useEffect(() => {
     checkBiometricCapability();
@@ -33,75 +34,89 @@ export default function BiometricSetup({ email, onComplete, onSkip }: BiometricS
       const enrolled = await LocalAuthentication.isEnrolledAsync();
       const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
 
-      setIsAvailable(compatible && enrolled);
+      const available = compatible && enrolled;
+      setBiometricAvailable(available);
 
-      if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-        setBiometricType("face");
-      } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-        setBiometricType("fingerprint");
-      } else if (types.includes(LocalAuthentication.AuthenticationType.IRIS)) {
-        setBiometricType("iris");
+      if (available) {
+        const typeNames = types.map((type) => {
+          if (type === LocalAuthentication.AuthenticationType.FINGERPRINT) {
+            return "Fingerprint";
+          } else if (type === LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION) {
+            return "Face ID";
+          } else if (type === LocalAuthentication.AuthenticationType.IRIS) {
+            return "Iris";
+          }
+          return "Biometric";
+        });
+        setBiometricType(typeNames.join(" or "));
       }
 
-      console.log("[BiometricSetup] Available:", compatible && enrolled, "Type:", biometricType);
+      console.log("[BiometricSetup] Biometric capability check:", {
+        compatible,
+        enrolled,
+        available,
+        types: types.length,
+      });
     } catch (error) {
-      console.error("[BiometricSetup] Error checking capability:", error);
-      setIsAvailable(false);
+      console.error("[BiometricSetup] Failed to check biometric capability:", error);
+      setBiometricAvailable(false);
     }
   };
 
   const handleSetupBiometric = async () => {
     setLoading(true);
     try {
-      console.log("[BiometricSetup] Starting biometric enrollment");
-      
+      console.log("[BiometricSetup] Starting biometric setup for:", email);
+
+      // Authenticate with biometric
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: "Set up biometric authentication",
         fallbackLabel: "Use passcode",
         disableDeviceFallback: false,
       });
 
-      if (result.success) {
-        console.log("[BiometricSetup] Biometric authentication successful");
-        
-        // Generate a unique identifier for this device's biometric credential
-        // In production, this would be a secure key stored in the device's secure enclave
-        const biometricPublicKey = `${email}_${Platform.OS}_${Date.now()}`;
-        
-        // Register biometric with backend
-        try {
-          const { apiPost } = await import("@/utils/api");
-          await apiPost("/api/biometric/register", {
-            email,
-            biometricPublicKey,
-          });
-          console.log("[BiometricSetup] Biometric registered with backend");
-        } catch (error) {
-          console.error("[BiometricSetup] Failed to register biometric with backend:", error);
-          // Continue anyway - store locally
-        }
-        
-        // Store the biometric key locally for future sign-ins
-        const storageKey = `biometric_key_${email}`;
-        if (Platform.OS === "web") {
-          localStorage.setItem(storageKey, biometricPublicKey);
-        } else {
-          await SecureStore.setItemAsync(storageKey, biometricPublicKey);
-        }
-        
-        console.log("[BiometricSetup] Generated and stored biometric key");
-        onComplete(biometricPublicKey);
-      } else {
-        console.log("[BiometricSetup] Biometric authentication failed or cancelled");
-        setLoading(false);
+      if (!result.success) {
+        console.log("[BiometricSetup] Biometric authentication cancelled or failed");
+        onComplete(null);
+        return;
       }
-    } catch (error: any) {
+
+      console.log("[BiometricSetup] Biometric authentication successful");
+
+      // Generate a unique public key for this biometric credential
+      // In a real implementation, this would be a cryptographic key pair
+      // For now, we'll use a simple unique identifier
+      const biometricPublicKey = `biometric_${email}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+      console.log("[BiometricSetup] Generated biometric public key, registering with backend");
+
+      // Register biometric credential with backend
+      const { apiPost } = await import("@/utils/api");
+      await apiPost("/api/biometric/register", {
+        email,
+        biometricPublicKey,
+      });
+
+      console.log("[BiometricSetup] Biometric credential registered with backend successfully");
+
+      // Store the biometric key locally for future sign-ins
+      const { storeBiometricKey } = await import("@/lib/auth");
+      await storeBiometricKey(email, biometricPublicKey);
+
+      // Store the last used email for biometric sign-in
+      await setLastUsedEmail(email);
+      console.log("[BiometricSetup] Stored biometric key and email for future sign-ins");
+
+      onComplete(biometricPublicKey);
+    } catch (error) {
       console.error("[BiometricSetup] Biometric setup failed:", error);
+      onComplete(null);
+    } finally {
       setLoading(false);
     }
   };
 
-  if (!isAvailable) {
+  if (!biometricAvailable) {
     return (
       <View style={styles.container}>
         <View style={styles.iconContainer}>
@@ -114,48 +129,45 @@ export default function BiometricSetup({ email, onComplete, onSkip }: BiometricS
         </View>
         <Text style={styles.title}>Biometric Not Available</Text>
         <Text style={styles.description}>
-          Your device doesn&apos;t have biometric authentication set up. You can skip this step and use email verification to sign in.
+          Your device does not support biometric authentication or it is not set up.
+          Please set up biometric authentication in your device settings.
         </Text>
         <TouchableOpacity style={styles.skipButton} onPress={onSkip}>
-          <Text style={styles.skipButtonText}>Continue without Biometric</Text>
+          <Text style={styles.skipButtonText}>Continue Without Biometric</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  const biometricLabel = biometricType === "face" ? "Face ID" : "Fingerprint";
-  const biometricIcon = biometricType === "face" ? "face" : "fingerprint";
-
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
         <IconSymbol
-          ios_icon_name={biometricType === "face" ? "faceid" : "touchid"}
-          android_material_icon_name={biometricIcon}
+          ios_icon_name="faceid"
+          android_material_icon_name="fingerprint"
           size={64}
           color="#007AFF"
         />
       </View>
-
-      <Text style={styles.title}>Set Up {biometricLabel}</Text>
+      <Text style={styles.title}>Set Up Biometric Authentication</Text>
       <Text style={styles.description}>
-        Use {biometricLabel} for quick and secure access to Kenya Civic. You can always sign in with your email if needed.
+        Use {biometricType} to quickly and securely sign in to Kenya Civic.
       </Text>
 
       <TouchableOpacity
-        style={[styles.primaryButton, loading && styles.buttonDisabled]}
+        style={[styles.setupButton, loading && styles.buttonDisabled]}
         onPress={handleSetupBiometric}
         disabled={loading}
       >
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.primaryButtonText}>Enable {biometricLabel}</Text>
+          <Text style={styles.setupButtonText}>Enable Biometric</Text>
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.skipButton} onPress={onSkip}>
-        <Text style={styles.skipButtonText}>Skip for now</Text>
+      <TouchableOpacity style={styles.skipButton} onPress={onSkip} disabled={loading}>
+        <Text style={styles.skipButtonText}>Skip for Now</Text>
       </TouchableOpacity>
     </View>
   );
@@ -173,9 +185,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: "center",
     color: "#000",
   },
@@ -186,28 +198,31 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     lineHeight: 24,
   },
-  primaryButton: {
+  setupButton: {
     width: "100%",
     height: 50,
     backgroundColor: "#007AFF",
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  primaryButtonText: {
+  setupButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
   skipButton: {
-    padding: 12,
+    width: "100%",
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
   },
   skipButtonText: {
     color: "#007AFF",
     fontSize: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

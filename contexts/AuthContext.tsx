@@ -30,7 +30,7 @@ interface AuthContextType {
   loading: boolean;
   registerAgent: (registrationData: any) => Promise<{ agent: Agent; success: boolean }>;
   registerBiometric: (email: string, biometricPublicKey: string) => Promise<void>;
-  signInWithBiometric: (email: string) => Promise<void>;
+  signInWithBiometric: () => Promise<void>;
   signOut: () => Promise<void>;
   fetchUser: () => Promise<void>;
 }
@@ -122,41 +122,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signInWithBiometric = async (email: string) => {
+  const signInWithBiometric = async () => {
     try {
-      console.log("[AuthContext] Signing in with biometric for:", email);
+      console.log("[AuthContext] Starting biometric sign-in");
       
-      // Authenticate with device biometric first
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: "Sign in with biometric",
+      // First, authenticate with device biometric
+      const biometricResult = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Sign in to Kenya Civic",
         fallbackLabel: "Use passcode",
         disableDeviceFallback: false,
       });
 
-      if (!result.success) {
-        throw new Error("Biometric authentication failed");
+      if (!biometricResult.success) {
+        throw new Error("Biometric authentication was cancelled or failed");
       }
+
+      console.log("[AuthContext] Device biometric authentication successful");
       
-      // Get the stored biometric public key for this email
-      const biometricPublicKey = await getBiometricKey(email);
+      // Get all stored biometric keys (we need to try them since we don't have email input)
+      // For now, we'll need to get the email from the last registered user
+      // This is a limitation of removing the email input - we need to store the last used email
+      const lastEmail = await getLastUsedEmail();
+      
+      if (!lastEmail) {
+        throw new Error("No registered biometric found. Please register first.");
+      }
+
+      const biometricPublicKey = await getBiometricKey(lastEmail);
 
       if (!biometricPublicKey) {
-        throw new Error("No biometric credential found for this email. Please register first.");
+        throw new Error("No biometric credential found. Please register first.");
       }
 
+      console.log("[AuthContext] Verifying biometric with backend for:", lastEmail);
+      
       const { apiPost } = await import("@/utils/api");
-      const response = await apiPost<{ success: boolean; agentId: string; civicCode: string; email: string }>("/api/biometric/verify", {
-        email,
+      const response = await apiPost<{ success: boolean; token: string; user: { id: string; email: string; name: string } }>("/api/biometric/verify", {
+        email: lastEmail,
         biometricPublicKey,
       });
       
-      if (response.success) {
-        console.log("[AuthContext] Biometric verification successful");
-        // The backend doesn't return a token yet, so we need to use Better Auth
-        // to create a session. For now, we'll just fetch the user.
-        await fetchUser();
+      if (response.success && response.token) {
+        console.log("[AuthContext] Biometric verification successful, setting session token");
+        await setBearerToken(response.token);
+        setUser(response.user as User);
+      } else {
+        throw new Error("Biometric verification failed");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[AuthContext] Biometric sign in failed:", error);
       throw error;
     }
@@ -197,4 +210,23 @@ export function useAuth() {
     throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
+}
+
+// Helper to store/retrieve the last used email for biometric sign-in
+async function getLastUsedEmail(): Promise<string | null> {
+  const storageKey = "last_biometric_email";
+  if (Platform.OS === "web") {
+    return localStorage.getItem(storageKey);
+  } else {
+    return await SecureStore.getItemAsync(storageKey);
+  }
+}
+
+export async function setLastUsedEmail(email: string) {
+  const storageKey = "last_biometric_email";
+  if (Platform.OS === "web") {
+    localStorage.setItem(storageKey, email);
+  } else {
+    await SecureStore.setItemAsync(storageKey, email);
+  }
 }

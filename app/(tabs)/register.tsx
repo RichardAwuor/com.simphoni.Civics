@@ -271,12 +271,17 @@ export default function RegisterScreen() {
   };
 
   const handleBiometricComplete = async (biometricPublicKey: string | null) => {
-    // Biometric registration is handled in BiometricSetup component
-    // Just show success and redirect
+    if (!biometricPublicKey) {
+      console.error("[Register] Biometric setup failed - no public key returned");
+      showModal("Error", "Biometric setup failed. Please try again.", "error");
+      return;
+    }
+
+    console.log("[Register] Biometric setup complete, registration successful");
     setRegistrationStep("complete");
     showModal(
       "Success",
-      "Registration complete! You can now sign in with your biometric or email.",
+      "Registration complete! You can now sign in with your biometric.",
       "success"
     );
     setTimeout(() => {
