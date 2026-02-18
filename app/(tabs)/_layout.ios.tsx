@@ -19,7 +19,7 @@ export default function TabLayout() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="on-location" name="on-location">
         <Icon 
-          sf={{ default: 'video', selected: 'video.fill' }}
+          sf={{ default: 'location', selected: 'location.fill' }}
           style={{ 
             tintColor: activeColor 
           }}

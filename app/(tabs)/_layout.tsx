@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Stack } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
@@ -14,7 +15,7 @@ export default function TabLayout() {
     {
       name: 'on-location',
       route: '/(tabs)/on-location',
-      icon: 'videocam',
+      icon: 'location-on',
       label: 'On-Location',
     },
     {
