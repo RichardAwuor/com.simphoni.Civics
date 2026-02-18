@@ -1,47 +1,83 @@
+
 {
   "expo": {
-    "name": "Civic",
-    "slug": "Civic",
+    "name": "Kenya Civic",
+    "slug": "kenya-civic",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/1fbb36a8-69de-42c3-9897-9c31bba8dbe2.png",
+    "icon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
+    "scheme": "kenyacivic",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/1fbb36a8-69de-42c3-9897-9c31bba8dbe2.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.Natively",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "bundleIdentifier": "com.kenyacivic.app",
+      "icon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/1fbb36a8-69de-42c3-9897-9c31bba8dbe2.png",
-        "backgroundColor": "#000000"
+        "foregroundImage": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
+        "backgroundColor": "#D32F2F"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.Natively"
+      "package": "com.kenyacivic.app",
+      "icon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png"
     },
     "web": {
-      "favicon": "./assets/images/1fbb36a8-69de-42c3-9897-9c31bba8dbe2.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png"
     },
     "plugins": [
-      "expo-font",
       "expo-router",
-      "expo-web-browser"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#D32F2F"
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Kenya Civic to access your camera to record incident videos and scan Form 34A.",
+          "microphonePermission": "Allow Kenya Civic to access your microphone to record incident videos.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Kenya Civic to access your photos to upload Form 34A.",
+          "savePhotosPermission": "Allow Kenya Civic to save incident videos and Form 34A scans.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Kenya Civic to use your location to tag incident videos and Form 34A submissions with accurate geo-coordinates."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Kenya Civic to use Face ID for secure biometric authentication."
+        }
+      ]
     ],
-    "scheme": "Civic",
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "your-project-id"
+      },
       "backendUrl": "https://4cjk8xzg5w77tfq474mq4utfs59jke49.app.specular.dev"
     }
   }
