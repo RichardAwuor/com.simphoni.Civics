@@ -99,13 +99,16 @@ export default function RegisterScreen() {
   }, [authLoading, user]);
 
   useEffect(() => {
-    if (county) {
+    console.log("[Register] County changed to:", county);
+    if (county && county !== "") {
+      console.log("[Register] Loading constituencies for county:", county);
       loadConstituencies(county);
+      // Reset child selections
       setConstituency("");
       setWard("");
-      setConstituencies([]);
       setWards([]);
     } else {
+      console.log("[Register] County cleared, resetting constituencies and wards");
       setConstituencies([]);
       setWards([]);
       setConstituency("");
@@ -114,11 +117,14 @@ export default function RegisterScreen() {
   }, [county]);
 
   useEffect(() => {
-    if (constituency) {
+    console.log("[Register] Constituency changed to:", constituency);
+    if (constituency && constituency !== "") {
+      console.log("[Register] Loading wards for constituency:", constituency);
       loadWards(constituency);
+      // Reset child selection
       setWard("");
-      setWards([]);
     } else {
+      console.log("[Register] Constituency cleared, resetting wards");
       setWards([]);
       setWard("");
     }
@@ -129,6 +135,7 @@ export default function RegisterScreen() {
       console.log("[Register] Loading counties...");
       const response = await apiGet<County[]>("/api/locations/counties");
       console.log("[Register] Counties loaded successfully:", response.length, "counties");
+      console.log("[Register] First 3 counties:", response.slice(0, 3));
       setCounties(response);
     } catch (error) {
       console.error("[Register] Failed to load counties:", error);
@@ -144,10 +151,12 @@ export default function RegisterScreen() {
         `/api/locations/constituencies/${encodeURIComponent(countyName)}`
       );
       console.log("[Register] Constituencies loaded successfully:", response.length, "constituencies");
+      console.log("[Register] Constituencies data:", response);
       setConstituencies(response);
     } catch (error) {
       console.error("[Register] Failed to load constituencies:", error);
       showModal("Error", "Failed to load constituencies. Please try again.", "error");
+      setConstituencies([]);
     } finally {
       setLoadingConstituencies(false);
     }
@@ -161,10 +170,12 @@ export default function RegisterScreen() {
         `/api/locations/wards/${encodeURIComponent(constituencyName)}`
       );
       console.log("[Register] Wards loaded successfully:", response.length, "wards");
+      console.log("[Register] Wards data:", response);
       setWards(response);
     } catch (error) {
       console.error("[Register] Failed to load wards:", error);
       showModal("Error", "Failed to load wards. Please try again.", "error");
+      setWards([]);
     } finally {
       setLoadingWards(false);
     }
@@ -314,6 +325,21 @@ export default function RegisterScreen() {
     showModal("Required", "Biometric setup is required to complete registration", "error");
   };
 
+  const handleCountyChange = (value: string) => {
+    console.log("[Register] User selected county:", value);
+    setCounty(value);
+  };
+
+  const handleConstituencyChange = (value: string) => {
+    console.log("[Register] User selected constituency:", value);
+    setConstituency(value);
+  };
+
+  const handleWardChange = (value: string) => {
+    console.log("[Register] User selected ward:", value);
+    setWard(value);
+  };
+
   if (agent && registrationStep === "complete") {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: "white" }]}>
@@ -359,12 +385,25 @@ export default function RegisterScreen() {
     );
   }
 
-  const countySelected = !!county;
-  const constituencySelected = !!constituency;
+  const countySelected = !!county && county !== "";
+  const constituencySelected = !!constituency && constituency !== "";
   const constituenciesAvailable = constituencies.length > 0;
   const wardsAvailable = wards.length > 0;
 
   const dateString = dateOfBirth.toLocaleDateString();
+
+  console.log("[Register] Render state:", {
+    county,
+    countySelected,
+    constituencies: constituencies.length,
+    constituenciesAvailable,
+    loadingConstituencies,
+    constituency,
+    constituencySelected,
+    wards: wards.length,
+    wardsAvailable,
+    loadingWards,
+  });
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: "white" }]} edges={["top"]}>
@@ -427,7 +466,7 @@ export default function RegisterScreen() {
           <View style={[styles.pickerWrapper, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
             <Picker
               selectedValue={county}
-              onValueChange={(value) => setCounty(value)}
+              onValueChange={handleCountyChange}
               style={[styles.picker, { color: "#000" }]}
             >
               <Picker.Item label="Select County" value="" />
@@ -467,9 +506,9 @@ export default function RegisterScreen() {
             ]}>
               <Picker
                 selectedValue={constituency}
-                onValueChange={(value) => setConstituency(value)}
+                onValueChange={handleConstituencyChange}
                 style={[styles.picker, { color: "#000" }]}
-                enabled={countySelected && constituenciesAvailable}
+                enabled={countySelected && !loadingConstituencies}
               >
                 <Picker.Item 
                   label={
@@ -518,9 +557,9 @@ export default function RegisterScreen() {
             ]}>
               <Picker
                 selectedValue={ward}
-                onValueChange={(value) => setWard(value)}
+                onValueChange={handleWardChange}
                 style={[styles.picker, { color: "#000" }]}
-                enabled={constituencySelected && wardsAvailable}
+                enabled={constituencySelected && !loadingWards}
               >
                 <Picker.Item 
                   label={
