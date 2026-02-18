@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Kenya Civic",
-    "slug": "kenya-civic-dklrkd",
+    "name": "Civic",
+    "slug": "Civic",
     "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
-    "scheme": "kenyacivic",
+    "scheme": "Civic",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -78,7 +78,7 @@
       "eas": {
         "projectId": "your-project-id"
       },
-      "backendUrl": "https://prod-proj-fbz7nukarunpewn6kjwxz-liwg5h36mq-ey.a.run.app"
+      "backendUrl": "https://4cjk8xzg5w77tfq474mq4utfs59jke49.app.specular.dev"
     }
   }
 }
