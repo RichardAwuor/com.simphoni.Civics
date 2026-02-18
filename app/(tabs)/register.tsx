@@ -20,6 +20,7 @@ import { apiGet, apiPost } from "@/utils/api";
 import CustomModal from "@/components/ui/Modal";
 import BiometricSetup from "@/components/BiometricSetup";
 import { useRouter } from "expo-router";
+import { IconSymbol } from "@/components/IconSymbol";
 
 interface County {
   name: string;
@@ -355,6 +356,8 @@ export default function RegisterScreen() {
   const constituenciesAvailable = constituencies.length > 0;
   const wardsAvailable = wards.length > 0;
 
+  const dateString = dateOfBirth.toLocaleDateString();
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: "white" }]} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -413,7 +416,7 @@ export default function RegisterScreen() {
           />
 
           <Text style={[styles.label, { color: "#000" }]}>County *</Text>
-          <View style={[styles.pickerContainer, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
+          <View style={[styles.pickerWrapper, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
             <Picker
               selectedValue={county}
               onValueChange={(value) => setCounty(value)}
@@ -424,22 +427,30 @@ export default function RegisterScreen() {
                 <Picker.Item key={c.code} label={c.name} value={c.name} />
               ))}
             </Picker>
+            <View style={styles.pickerIconContainer}>
+              <IconSymbol
+                ios_icon_name="chevron.down"
+                android_material_icon_name="arrow-drop-down"
+                size={24}
+                color="#666"
+              />
+            </View>
           </View>
 
           <Text style={[styles.label, { color: "#000" }]}>Constituency *</Text>
           {!countySelected && (
-            <Text style={[styles.helperText, { color: "#999", marginTop: 4 }]}>
+            <Text style={[styles.helperText, { color: "#999" }]}>
               Please select a county first
             </Text>
           )}
           {countySelected && loadingConstituencies && (
             <View style={[styles.loadingIndicator, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <ActivityIndicator size="small" color="#FF0000" />
               <Text style={[styles.loadingText, { color: "#666" }]}>Loading constituencies...</Text>
             </View>
           )}
           {countySelected && !loadingConstituencies && (
-            <View style={[styles.pickerContainer, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
+            <View style={[styles.pickerWrapper, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
               <Picker
                 selectedValue={constituency}
                 onValueChange={(value) => setConstituency(value)}
@@ -454,23 +465,31 @@ export default function RegisterScreen() {
                   <Picker.Item key={c.code} label={c.name} value={c.name} />
                 ))}
               </Picker>
+              <View style={styles.pickerIconContainer}>
+                <IconSymbol
+                  ios_icon_name="chevron.down"
+                  android_material_icon_name="arrow-drop-down"
+                  size={24}
+                  color="#666"
+                />
+              </View>
             </View>
           )}
 
           <Text style={[styles.label, { color: "#000" }]}>Ward *</Text>
           {!constituencySelected && (
-            <Text style={[styles.helperText, { color: "#999", marginTop: 4 }]}>
+            <Text style={[styles.helperText, { color: "#999" }]}>
               Please select a constituency first
             </Text>
           )}
           {constituencySelected && loadingWards && (
             <View style={[styles.loadingIndicator, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <ActivityIndicator size="small" color="#FF0000" />
               <Text style={[styles.loadingText, { color: "#666" }]}>Loading wards...</Text>
             </View>
           )}
           {constituencySelected && !loadingWards && (
-            <View style={[styles.pickerContainer, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
+            <View style={[styles.pickerWrapper, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
               <Picker
                 selectedValue={ward}
                 onValueChange={(value) => setWard(value)}
@@ -485,17 +504,31 @@ export default function RegisterScreen() {
                   <Picker.Item key={w.code} label={w.name} value={w.name} />
                 ))}
               </Picker>
+              <View style={styles.pickerIconContainer}>
+                <IconSymbol
+                  ios_icon_name="chevron.down"
+                  android_material_icon_name="arrow-drop-down"
+                  size={24}
+                  color="#666"
+                />
+              </View>
             </View>
           )}
 
           <Text style={[styles.label, { color: "#000" }]}>Date of Birth *</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: "#FF0000", backgroundColor: "#fff" }]}
+            style={[styles.input, styles.dateInput, { borderColor: "#FF0000", backgroundColor: "#fff" }]}
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={{ color: "#000" }}>
-              {dateOfBirth.toLocaleDateString()}
+              {dateString}
             </Text>
+            <IconSymbol
+              ios_icon_name="calendar"
+              android_material_icon_name="calendar-today"
+              size={20}
+              color="#666"
+            />
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -625,18 +658,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     justifyContent: "center",
   },
+  dateInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   helperText: {
     fontSize: 12,
     marginTop: -8,
     fontStyle: "italic",
   },
-  pickerContainer: {
+  pickerWrapper: {
     borderWidth: 1,
     borderRadius: 8,
     overflow: "hidden",
+    position: "relative",
   },
   picker: {
     height: 50,
+  },
+  pickerIconContainer: {
+    position: "absolute",
+    right: 12,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    pointerEvents: "none",
   },
   loadingIndicator: {
     height: 50,
