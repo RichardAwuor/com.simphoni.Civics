@@ -382,7 +382,7 @@ export default function RegisterScreen() {
         <View style={styles.form}>
           <Text style={[styles.label, { color: "#000" }]}>Email *</Text>
           <TextInput
-            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
+            style={[styles.input, { color: "#000", borderColor: "#FF0000", backgroundColor: "#fff" }]}
             placeholder="Enter your email"
             placeholderTextColor="#999"
             value={email}
@@ -393,7 +393,7 @@ export default function RegisterScreen() {
 
           <Text style={[styles.label, { color: "#000" }]}>Confirm Email *</Text>
           <TextInput
-            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
+            style={[styles.input, { color: "#000", borderColor: "#FF0000", backgroundColor: "#fff" }]}
             placeholder="Confirm your email"
             placeholderTextColor="#999"
             value={confirmEmail}
@@ -404,7 +404,7 @@ export default function RegisterScreen() {
 
           <Text style={[styles.label, { color: "#000" }]}>First Name *</Text>
           <TextInput
-            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
+            style={[styles.input, { color: "#000", borderColor: "#FF0000", backgroundColor: "#fff" }]}
             placeholder="Enter your first name"
             placeholderTextColor="#999"
             value={firstName}
@@ -413,7 +413,7 @@ export default function RegisterScreen() {
 
           <Text style={[styles.label, { color: "#000" }]}>Last Name *</Text>
           <TextInput
-            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
+            style={[styles.input, { color: "#000", borderColor: "#FF0000", backgroundColor: "#fff" }]}
             placeholder="Enter your last name"
             placeholderTextColor="#999"
             value={lastName}
@@ -421,7 +421,7 @@ export default function RegisterScreen() {
           />
 
           <Text style={[styles.label, { color: "#000" }]}>County *</Text>
-          <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
+          <View style={[styles.pickerContainer, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
             <Picker
               selectedValue={county}
               onValueChange={(value) => setCounty(value)}
@@ -441,13 +441,13 @@ export default function RegisterScreen() {
             </Text>
           )}
           {countySelected && loadingConstituencies && (
-            <View style={[styles.loadingIndicator, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
+            <View style={[styles.loadingIndicator, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
               <ActivityIndicator size="small" color={theme.colors.primary} />
               <Text style={[styles.loadingText, { color: "#666" }]}>Loading constituencies...</Text>
             </View>
           )}
           {countySelected && !loadingConstituencies && (
-            <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
+            <View style={[styles.pickerContainer, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
               <Picker
                 selectedValue={constituency}
                 onValueChange={(value) => setConstituency(value)}
@@ -472,13 +472,13 @@ export default function RegisterScreen() {
             </Text>
           )}
           {constituencySelected && loadingWards && (
-            <View style={[styles.loadingIndicator, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
+            <View style={[styles.loadingIndicator, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
               <ActivityIndicator size="small" color={theme.colors.primary} />
               <Text style={[styles.loadingText, { color: "#666" }]}>Loading wards...</Text>
             </View>
           )}
           {constituencySelected && !loadingWards && (
-            <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
+            <View style={[styles.pickerContainer, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
               <Picker
                 selectedValue={ward}
                 onValueChange={(value) => setWard(value)}
@@ -498,7 +498,7 @@ export default function RegisterScreen() {
 
           <Text style={[styles.label, { color: "#000" }]}>Date of Birth *</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: "#ccc", backgroundColor: "#fff" }]}
+            style={[styles.input, { borderColor: "#FF0000", backgroundColor: "#fff" }]}
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={{ color: "#000" }}>
@@ -522,7 +522,7 @@ export default function RegisterScreen() {
 
           <Text style={[styles.label, { color: "#000" }]}>8-Digit National ID Number *</Text>
           <TextInput
-            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
+            style={[styles.input, { color: "#000", borderColor: "#FF0000", backgroundColor: "#fff" }]}
             placeholder="Enter 8-digit National ID"
             placeholderTextColor="#999"
             value={nationalId}
@@ -535,7 +535,7 @@ export default function RegisterScreen() {
           </Text>
 
           <TouchableOpacity
-            style={[styles.registerButton, { backgroundColor: theme.colors.primary }]}
+            style={[styles.registerButton, { backgroundColor: "#FF0000" }]}
             onPress={handleRegister}
             disabled={loading}
           >
