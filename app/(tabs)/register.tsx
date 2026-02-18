@@ -371,14 +371,6 @@ export default function RegisterScreen() {
           WANJIKU@63
         </Text>
 
-        {needsAuth && !user && (
-          <View style={[styles.infoBox, { backgroundColor: "#f0f0f0", borderColor: theme.colors.primary }]}>
-            <Text style={[styles.infoText, { color: "#000" }]}>
-              ℹ️ You'll receive an email link to verify your identity after submitting this form.
-            </Text>
-          </View>
-        )}
-
         <View style={styles.form}>
           <Text style={[styles.label, { color: "#000" }]}>Email *</Text>
           <TextInput
@@ -666,15 +658,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
-  },
-  infoBox: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  infoText: {
-    fontSize: 14,
-    lineHeight: 20,
   },
 });
