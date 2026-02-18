@@ -296,8 +296,8 @@ export default function RegisterScreen() {
 
   if (agent && registrationStep === "complete") {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.successText, { color: theme.colors.text }]}>
+      <View style={[styles.loadingContainer, { backgroundColor: "white" }]}>
+        <Text style={[styles.successText, { color: "#000" }]}>
           Registration Complete!
         </Text>
         <Text style={[styles.civicCode, { color: theme.colors.primary }]}>
@@ -309,17 +309,17 @@ export default function RegisterScreen() {
 
   if (registrationStep === "biometric" && agent) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: "white" }]} edges={["top"]}>
         <View style={styles.biometricHeader}>
           <Image
             source={require("@/assets/images/d8b57700-6b85-43a6-9b94-d3810c5a9213.png")}
             style={styles.headerLogo}
             resizeMode="contain"
           />
-          <Text style={[styles.biometricTitle, { color: theme.colors.text }]}>
+          <Text style={[styles.biometricTitle, { color: "#000" }]}>
             Set Fingerprint
           </Text>
-          <Text style={[styles.biometricSubtitle, { color: theme.dark ? "#98989D" : "#666" }]}>
+          <Text style={[styles.biometricSubtitle, { color: "#666" }]}>
             Required to log into the app
           </Text>
         </View>
@@ -340,7 +340,7 @@ export default function RegisterScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: "white" }]} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Image
@@ -350,66 +350,66 @@ export default function RegisterScreen() {
           />
         </View>
 
-        <Text style={[styles.title, { color: theme.colors.text }]}>New Agent Registration</Text>
-        <Text style={[styles.subtitle, { color: theme.dark ? "#98989D" : "#666" }]}>
+        <Text style={[styles.title, { color: "#000" }]}>New Agent Registration</Text>
+        <Text style={[styles.subtitle, { color: "#666" }]}>
           WANJIKU@63
         </Text>
 
         {needsAuth && !user && (
-          <View style={[styles.infoBox, { backgroundColor: theme.colors.card, borderColor: theme.colors.primary }]}>
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>
+          <View style={[styles.infoBox, { backgroundColor: "#f0f0f0", borderColor: theme.colors.primary }]}>
+            <Text style={[styles.infoText, { color: "#000" }]}>
               ℹ️ You'll receive an email link to verify your identity after submitting this form.
             </Text>
           </View>
         )}
 
         <View style={styles.form}>
-          <Text style={[styles.label, { color: theme.colors.text }]}>Email *</Text>
+          <Text style={[styles.label, { color: "#000" }]}>Email *</Text>
           <TextInput
-            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
             placeholder="Enter your email"
-            placeholderTextColor={theme.dark ? "#666" : "#999"}
+            placeholderTextColor="#999"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
           />
 
-          <Text style={[styles.label, { color: theme.colors.text }]}>Confirm Email *</Text>
+          <Text style={[styles.label, { color: "#000" }]}>Confirm Email *</Text>
           <TextInput
-            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
             placeholder="Confirm your email"
-            placeholderTextColor={theme.dark ? "#666" : "#999"}
+            placeholderTextColor="#999"
             value={confirmEmail}
             onChangeText={setConfirmEmail}
             keyboardType="email-address"
             autoCapitalize="none"
           />
 
-          <Text style={[styles.label, { color: theme.colors.text }]}>First Name *</Text>
+          <Text style={[styles.label, { color: "#000" }]}>First Name *</Text>
           <TextInput
-            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
             placeholder="Enter your first name"
-            placeholderTextColor={theme.dark ? "#666" : "#999"}
+            placeholderTextColor="#999"
             value={firstName}
             onChangeText={setFirstName}
           />
 
-          <Text style={[styles.label, { color: theme.colors.text }]}>Last Name *</Text>
+          <Text style={[styles.label, { color: "#000" }]}>Last Name *</Text>
           <TextInput
-            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
             placeholder="Enter your last name"
-            placeholderTextColor={theme.dark ? "#666" : "#999"}
+            placeholderTextColor="#999"
             value={lastName}
             onChangeText={setLastName}
           />
 
-          <Text style={[styles.label, { color: theme.colors.text }]}>County *</Text>
-          <View style={[styles.pickerContainer, { borderColor: theme.colors.border }]}>
+          <Text style={[styles.label, { color: "#000" }]}>County *</Text>
+          <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
             <Picker
               selectedValue={county}
               onValueChange={(value) => setCounty(value)}
-              style={[styles.picker, { color: theme.colors.text }]}
+              style={[styles.picker, { color: "#000" }]}
             >
               <Picker.Item label="Select County" value="" />
               {counties.map((c) => (
@@ -418,12 +418,12 @@ export default function RegisterScreen() {
             </Picker>
           </View>
 
-          <Text style={[styles.label, { color: theme.colors.text }]}>Constituency *</Text>
-          <View style={[styles.pickerContainer, { borderColor: theme.colors.border }]}>
+          <Text style={[styles.label, { color: "#000" }]}>Constituency *</Text>
+          <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
             <Picker
               selectedValue={constituency}
               onValueChange={(value) => setConstituency(value)}
-              style={[styles.picker, { color: theme.colors.text }]}
+              style={[styles.picker, { color: "#000" }]}
               enabled={!!county}
             >
               <Picker.Item label="Select Constituency" value="" />
@@ -433,12 +433,12 @@ export default function RegisterScreen() {
             </Picker>
           </View>
 
-          <Text style={[styles.label, { color: theme.colors.text }]}>Ward *</Text>
-          <View style={[styles.pickerContainer, { borderColor: theme.colors.border }]}>
+          <Text style={[styles.label, { color: "#000" }]}>Ward *</Text>
+          <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
             <Picker
               selectedValue={ward}
               onValueChange={(value) => setWard(value)}
-              style={[styles.picker, { color: theme.colors.text }]}
+              style={[styles.picker, { color: "#000" }]}
               enabled={!!constituency}
             >
               <Picker.Item label="Select Ward" value="" />
@@ -448,12 +448,12 @@ export default function RegisterScreen() {
             </Picker>
           </View>
 
-          <Text style={[styles.label, { color: theme.colors.text }]}>Date of Birth *</Text>
+          <Text style={[styles.label, { color: "#000" }]}>Date of Birth *</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: theme.colors.border }]}
+            style={[styles.input, { borderColor: "#ccc", backgroundColor: "#fff" }]}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text style={{ color: theme.colors.text }}>
+            <Text style={{ color: "#000" }}>
               {dateOfBirth.toLocaleDateString()}
             </Text>
           </TouchableOpacity>
@@ -472,17 +472,17 @@ export default function RegisterScreen() {
             />
           )}
 
-          <Text style={[styles.label, { color: theme.colors.text }]}>8-Digit National ID Number *</Text>
+          <Text style={[styles.label, { color: "#000" }]}>8-Digit National ID Number *</Text>
           <TextInput
-            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+            style={[styles.input, { color: "#000", borderColor: "#ccc", backgroundColor: "#fff" }]}
             placeholder="Enter 8-digit National ID"
-            placeholderTextColor={theme.dark ? "#666" : "#999"}
+            placeholderTextColor="#999"
             value={nationalId}
             onChangeText={setNationalId}
             keyboardType="number-pad"
             maxLength={8}
           />
-          <Text style={[styles.helperText, { color: theme.dark ? "#98989D" : "#666" }]}>
+          <Text style={[styles.helperText, { color: "#666" }]}>
             Will be encrypted and replaced with auto-generated Civic Code
           </Text>
 
