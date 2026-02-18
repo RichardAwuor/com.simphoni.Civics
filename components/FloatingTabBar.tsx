@@ -264,6 +264,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '500',
     marginTop: 2,
+    textAlign: 'center',
     // Dynamic styling applied in component
   },
 });
