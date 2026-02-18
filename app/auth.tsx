@@ -36,8 +36,8 @@ export default function AuthScreen() {
 
   const handleNewRegistration = () => {
     console.log("[Auth] User tapped New Agent Registration button - navigating to register screen");
-    // Use replace to ensure clean navigation to registration
-    router.replace("/(tabs)/register");
+    // Use push instead of replace to ensure proper navigation on iOS with NativeTabs
+    router.push("/(tabs)/register");
   };
 
   const handleBiometricSignIn = async () => {

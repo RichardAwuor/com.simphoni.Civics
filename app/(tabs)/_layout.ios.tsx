@@ -35,6 +35,13 @@ export default function TabLayout() {
         />
         <Label style={{ color: activeColor }}>Profile</Label>
       </NativeTabs.Trigger>
+      {/* Hidden register tab - accessible via navigation but not shown in tab bar */}
+      <NativeTabs.Trigger key="register" name="register" hidden={true}>
+        <Icon 
+          sf="person.badge.plus"
+        />
+        <Label>Register</Label>
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
