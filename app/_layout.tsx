@@ -33,12 +33,15 @@ function RootLayoutNav() {
   const [checkingAgent, setCheckingAgent] = React.useState(false);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading) {
+      console.log("[Layout] Auth loading...");
+      return;
+    }
 
     const inAuthGroup = segments[0] === "auth" || segments[0] === "auth-popup" || segments[0] === "auth-callback";
     const inRegisterScreen = segments[0] === "(tabs)" && segments[1] === "register";
 
-    console.log("[Layout] Navigation check - user:", !!user, "segments:", segments, "inRegisterScreen:", inRegisterScreen);
+    console.log("[Layout] Navigation check - user:", !!user, "segments:", segments, "inAuthGroup:", inAuthGroup, "inRegisterScreen:", inRegisterScreen);
 
     // Allow access to registration screen without authentication
     if (inRegisterScreen) {
@@ -111,18 +114,22 @@ function RootLayoutNav() {
 
   if (loading || checkingAgent) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#000" }}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
+        <ActivityIndicator size="large" color="#FF0000" />
       </View>
     );
   }
 
   return (
-    <Stack>
-      <Stack.Screen name="auth" options={{ headerShown: false }} />
-      <Stack.Screen name="auth-popup" options={{ headerShown: false }} />
-      <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="auth" />
+      <Stack.Screen name="auth-popup" />
+      <Stack.Screen name="auth-callback" />
+      <Stack.Screen name="(tabs)" />
     </Stack>
   );
 }
@@ -136,11 +143,13 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
+      console.log("[RootLayout] Fonts loaded, hiding splash screen");
       SplashScreen.hideAsync();
     }
   }, [loaded]);
 
   if (!loaded) {
+    console.log("[RootLayout] Waiting for fonts to load...");
     return null;
   }
 
@@ -168,6 +177,9 @@ export default function RootLayout() {
       notification: "rgb(255, 69, 58)", // System Red (Dark Mode)
     },
   };
+  
+  console.log("[RootLayout] Rendering with colorScheme:", colorScheme);
+  
   return (
     <>
       <StatusBar style="auto" animated />
@@ -176,7 +188,7 @@ export default function RootLayout() {
       >
         <AuthProvider>
           <WidgetProvider>
-            <GestureHandlerRootView>
+            <GestureHandlerRootView style={{ flex: 1 }}>
               <RootLayoutNav />
               <SystemBars style={"auto"} />
             </GestureHandlerRootView>
