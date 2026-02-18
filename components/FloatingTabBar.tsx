@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   View,
@@ -172,27 +173,29 @@ export default function FloatingTabBar({
           <View style={styles.tabsContainer}>
             {tabs.map((tab, index) => {
               const isActive = activeTabIndex === index;
+              const activeColor = '#FF0000';
+              const inactiveColor = theme.dark ? '#98989D' : '#000000';
+              const iconColor = isActive ? activeColor : inactiveColor;
 
               return (
                 <React.Fragment key={index}>
                 <TouchableOpacity
-                  key={index} // Use index as key
                   style={styles.tab}
                   onPress={() => handleTabPress(tab.route)}
                   activeOpacity={0.7}
                 >
-                  <View key={index} style={styles.tabContent}>
+                  <View style={styles.tabContent}>
                     <IconSymbol
                       android_material_icon_name={tab.icon}
                       ios_icon_name={tab.icon}
                       size={24}
-                      color={isActive ? theme.colors.primary : (theme.dark ? '#98989D' : '#000000')}
+                      color={iconColor}
                     />
                     <Text
                       style={[
                         styles.tabLabel,
                         { color: theme.dark ? '#98989D' : '#8E8E93' },
-                        isActive && { color: theme.colors.primary, fontWeight: '600' },
+                        isActive && { color: activeColor, fontWeight: '600' },
                       ]}
                     >
                       {tab.label}
