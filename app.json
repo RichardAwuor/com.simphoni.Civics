@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "Civic",
@@ -5,7 +6,7 @@
     "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
-    "scheme": "Civic",
+    "scheme": "civic",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -15,11 +16,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
+        "foregroundImage": "./assets/images/eebec659-b8c1-4c52-bb3b-1840e5abf120.png",
         "backgroundColor": "#D32F2F"
       },
       "package": "com.simphoni.civic",
-      "icon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
+      "icon": "./assets/images/eebec659-b8c1-4c52-bb3b-1840e5abf120.png",
       "versionCode": 6
     },
     "web": {
