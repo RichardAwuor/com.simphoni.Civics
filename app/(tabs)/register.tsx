@@ -58,6 +58,8 @@ export default function RegisterScreen() {
   const { user, loading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(false);
+  const [loadingConstituencies, setLoadingConstituencies] = useState(false);
+  const [loadingWards, setLoadingWards] = useState(false);
   const [agent, setAgent] = useState<Agent | null>(null);
   const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("form");
   const [needsAuth, setNeedsAuth] = useState(false);
@@ -100,6 +102,8 @@ export default function RegisterScreen() {
       loadConstituencies(county);
       setConstituency("");
       setWard("");
+      setConstituencies([]);
+      setWards([]);
     }
   }, [county]);
 
@@ -107,6 +111,7 @@ export default function RegisterScreen() {
     if (constituency) {
       loadWards(constituency);
       setWard("");
+      setWards([]);
     }
   }, [constituency]);
 
@@ -123,6 +128,7 @@ export default function RegisterScreen() {
   };
 
   const loadConstituencies = async (countyName: string) => {
+    setLoadingConstituencies(true);
     try {
       console.log("[Register] Loading constituencies for county:", countyName);
       const response = await apiGet<Constituency[]>(
@@ -133,10 +139,13 @@ export default function RegisterScreen() {
     } catch (error) {
       console.error("[Register] Failed to load constituencies:", error);
       showModal("Error", "Failed to load constituencies. Please try again.", "error");
+    } finally {
+      setLoadingConstituencies(false);
     }
   };
 
   const loadWards = async (constituencyName: string) => {
+    setLoadingWards(true);
     try {
       console.log("[Register] Loading wards for constituency:", constituencyName);
       const response = await apiGet<Ward[]>(
@@ -147,6 +156,8 @@ export default function RegisterScreen() {
     } catch (error) {
       console.error("[Register] Failed to load wards:", error);
       showModal("Error", "Failed to load wards. Please try again.", "error");
+    } finally {
+      setLoadingWards(false);
     }
   };
 
@@ -339,6 +350,11 @@ export default function RegisterScreen() {
     );
   }
 
+  const countySelected = !!county;
+  const constituencySelected = !!constituency;
+  const constituenciesAvailable = constituencies.length > 0;
+  const wardsAvailable = wards.length > 0;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: "white" }]} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -419,34 +435,66 @@ export default function RegisterScreen() {
           </View>
 
           <Text style={[styles.label, { color: "#000" }]}>Constituency *</Text>
-          <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
-            <Picker
-              selectedValue={constituency}
-              onValueChange={(value) => setConstituency(value)}
-              style={[styles.picker, { color: "#000" }]}
-              enabled={!!county}
-            >
-              <Picker.Item label="Select Constituency" value="" />
-              {constituencies.map((c) => (
-                <Picker.Item key={c.code} label={c.name} value={c.name} />
-              ))}
-            </Picker>
-          </View>
+          {!countySelected && (
+            <Text style={[styles.helperText, { color: "#999", marginTop: 4 }]}>
+              Please select a county first
+            </Text>
+          )}
+          {countySelected && loadingConstituencies && (
+            <View style={[styles.loadingIndicator, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={[styles.loadingText, { color: "#666" }]}>Loading constituencies...</Text>
+            </View>
+          )}
+          {countySelected && !loadingConstituencies && (
+            <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
+              <Picker
+                selectedValue={constituency}
+                onValueChange={(value) => setConstituency(value)}
+                style={[styles.picker, { color: "#000" }]}
+                enabled={constituenciesAvailable}
+              >
+                <Picker.Item 
+                  label={constituenciesAvailable ? "Select Constituency" : "No constituencies available"} 
+                  value="" 
+                />
+                {constituencies.map((c) => (
+                  <Picker.Item key={c.code} label={c.name} value={c.name} />
+                ))}
+              </Picker>
+            </View>
+          )}
 
           <Text style={[styles.label, { color: "#000" }]}>Ward *</Text>
-          <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
-            <Picker
-              selectedValue={ward}
-              onValueChange={(value) => setWard(value)}
-              style={[styles.picker, { color: "#000" }]}
-              enabled={!!constituency}
-            >
-              <Picker.Item label="Select Ward" value="" />
-              {wards.map((w) => (
-                <Picker.Item key={w.code} label={w.name} value={w.name} />
-              ))}
-            </Picker>
-          </View>
+          {!constituencySelected && (
+            <Text style={[styles.helperText, { color: "#999", marginTop: 4 }]}>
+              Please select a constituency first
+            </Text>
+          )}
+          {constituencySelected && loadingWards && (
+            <View style={[styles.loadingIndicator, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={[styles.loadingText, { color: "#666" }]}>Loading wards...</Text>
+            </View>
+          )}
+          {constituencySelected && !loadingWards && (
+            <View style={[styles.pickerContainer, { borderColor: "#ccc", backgroundColor: "#fff" }]}>
+              <Picker
+                selectedValue={ward}
+                onValueChange={(value) => setWard(value)}
+                style={[styles.picker, { color: "#000" }]}
+                enabled={wardsAvailable}
+              >
+                <Picker.Item 
+                  label={wardsAvailable ? "Select Ward" : "No wards available"} 
+                  value="" 
+                />
+                {wards.map((w) => (
+                  <Picker.Item key={w.code} label={w.name} value={w.name} />
+                ))}
+              </Picker>
+            </View>
+          )}
 
           <Text style={[styles.label, { color: "#000" }]}>Date of Birth *</Text>
           <TouchableOpacity
@@ -597,6 +645,15 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
+  },
+  loadingIndicator: {
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
   registerButton: {
     height: 50,
