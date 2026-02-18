@@ -105,6 +105,11 @@ export default function RegisterScreen() {
       setWard("");
       setConstituencies([]);
       setWards([]);
+    } else {
+      setConstituencies([]);
+      setWards([]);
+      setConstituency("");
+      setWard("");
     }
   }, [county]);
 
@@ -113,6 +118,9 @@ export default function RegisterScreen() {
       loadWards(constituency);
       setWard("");
       setWards([]);
+    } else {
+      setWards([]);
+      setWard("");
     }
   }, [constituency]);
 
@@ -443,22 +451,34 @@ export default function RegisterScreen() {
               Please select a county first
             </Text>
           )}
-          {countySelected && loadingConstituencies && (
+          {loadingConstituencies ? (
             <View style={[styles.loadingIndicator, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
               <ActivityIndicator size="small" color="#FF0000" />
               <Text style={[styles.loadingText, { color: "#666" }]}>Loading constituencies...</Text>
             </View>
-          )}
-          {countySelected && !loadingConstituencies && (
-            <View style={[styles.pickerWrapper, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
+          ) : (
+            <View style={[
+              styles.pickerWrapper, 
+              { 
+                borderColor: "#FF0000", 
+                backgroundColor: countySelected ? "#fff" : "#f5f5f5",
+                opacity: countySelected ? 1 : 0.6
+              }
+            ]}>
               <Picker
                 selectedValue={constituency}
                 onValueChange={(value) => setConstituency(value)}
                 style={[styles.picker, { color: "#000" }]}
-                enabled={constituenciesAvailable}
+                enabled={countySelected && constituenciesAvailable}
               >
                 <Picker.Item 
-                  label={constituenciesAvailable ? "Select Constituency" : "No constituencies available"} 
+                  label={
+                    !countySelected 
+                      ? "Select a county first" 
+                      : constituenciesAvailable 
+                        ? "Select Constituency" 
+                        : "No constituencies available"
+                  } 
                   value="" 
                 />
                 {constituencies.map((c) => (
@@ -482,22 +502,34 @@ export default function RegisterScreen() {
               Please select a constituency first
             </Text>
           )}
-          {constituencySelected && loadingWards && (
+          {loadingWards ? (
             <View style={[styles.loadingIndicator, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
               <ActivityIndicator size="small" color="#FF0000" />
               <Text style={[styles.loadingText, { color: "#666" }]}>Loading wards...</Text>
             </View>
-          )}
-          {constituencySelected && !loadingWards && (
-            <View style={[styles.pickerWrapper, { borderColor: "#FF0000", backgroundColor: "#fff" }]}>
+          ) : (
+            <View style={[
+              styles.pickerWrapper, 
+              { 
+                borderColor: "#FF0000", 
+                backgroundColor: constituencySelected ? "#fff" : "#f5f5f5",
+                opacity: constituencySelected ? 1 : 0.6
+              }
+            ]}>
               <Picker
                 selectedValue={ward}
                 onValueChange={(value) => setWard(value)}
                 style={[styles.picker, { color: "#000" }]}
-                enabled={wardsAvailable}
+                enabled={constituencySelected && wardsAvailable}
               >
                 <Picker.Item 
-                  label={wardsAvailable ? "Select Ward" : "No wards available"} 
+                  label={
+                    !constituencySelected 
+                      ? "Select a constituency first" 
+                      : wardsAvailable 
+                        ? "Select Ward" 
+                        : "No wards available"
+                  } 
                   value="" 
                 />
                 {wards.map((w) => (
@@ -594,8 +626,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+    marginLeft: 8,
+    fontSize: 14,
   },
   successText: {
     fontSize: 24,
@@ -693,7 +725,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    paddingHorizontal: 16,
   },
   registerButton: {
     height: 50,
