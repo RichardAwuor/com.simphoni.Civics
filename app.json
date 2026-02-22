@@ -5,7 +5,7 @@
     "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
-    "scheme": "civic",
+    "scheme": "Civic",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
