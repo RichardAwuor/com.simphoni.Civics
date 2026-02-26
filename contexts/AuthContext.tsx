@@ -68,7 +68,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[AuthContext] Fetching user session from Better Auth");
       setLoading(true);
       
-      const session = await authClient.getSession();
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Session check timeout")), 10000)
+      );
+      
+      const sessionPromise = authClient.getSession();
+      
+      const session = await Promise.race([sessionPromise, timeoutPromise]) as any;
+      
       console.log("[AuthContext] Session response:", session ? "Session found" : "No session");
       
       if (session?.data?.user) {

@@ -15,13 +15,14 @@ export default function IndexScreen() {
     return (
       <View style={styles.container}>
         <Image
-          source={require("@/assets/images/14f8f728-c617-420d-a9ca-dd6f305413d6.png")}
+          source={require("@/assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png")}
           style={styles.logo}
           resizeMode="contain"
         />
         <Text style={styles.title}>Kenya Civic</Text>
         <Text style={styles.subtitle}>WANJIKU@63</Text>
         <ActivityIndicator size="large" color="#FF3B30" style={styles.loader} />
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -41,7 +42,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#D32F2F",
   },
   logo: {
     width: 200,
@@ -53,16 +54,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 8,
     textAlign: "center",
-    color: "#000",
+    color: "#fff",
   },
   subtitle: {
     fontSize: 18,
     marginBottom: 32,
     textAlign: "center",
-    color: "#666",
+    color: "#fff",
     fontWeight: "600",
   },
   loader: {
     marginTop: 20,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#fff",
   },
 });
