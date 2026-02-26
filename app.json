@@ -1,38 +1,39 @@
+
 {
   "expo": {
     "name": "Civic",
     "slug": "Civic",
     "version": "1.0.5",
     "orientation": "portrait",
-    "icon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
-    "scheme": "Civic",
+    "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
+    "scheme": "civic",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kenyacivic.app",
-      "icon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png"
+      "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/eebec659-b8c1-4c52-bb3b-1840e5abf120.png",
+        "foregroundImage": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
         "backgroundColor": "#D32F2F"
       },
       "package": "com.simphoni.civic",
-      "icon": "./assets/images/eebec659-b8c1-4c52-bb3b-1840e5abf120.png",
+      "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
       "versionCode": 6
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png"
+      "favicon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/7bcb7964-0c30-43fd-8aa4-aa6402fd8edb.png",
+          "image": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#D32F2F"
