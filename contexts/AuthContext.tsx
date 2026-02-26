@@ -42,11 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("[AuthContext] Initializing - fetching user session");
     fetchUser();
 
     // Listen for deep links (e.g. from social auth redirects)
     const subscription = Linking.addEventListener("url", (event) => {
-      console.log("[AuthContext] Deep link received, refreshing user session");
+      console.log("[AuthContext] Deep link received:", event.url);
       setTimeout(() => fetchUser(), 500);
     });
 
@@ -64,22 +65,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     try {
+      console.log("[AuthContext] Fetching user session from Better Auth");
       setLoading(true);
+      
       const session = await authClient.getSession();
+      console.log("[AuthContext] Session response:", session ? "Session found" : "No session");
+      
       if (session?.data?.user) {
+        console.log("[AuthContext] User authenticated:", session.data.user.email);
         setUser(session.data.user as User);
+        
         // Sync token to SecureStore for utils/api.ts
         if (session.data.session?.token) {
+          console.log("[AuthContext] Syncing bearer token to SecureStore");
           await setBearerToken(session.data.session.token);
         }
       } else {
+        console.log("[AuthContext] No user session found");
         setUser(null);
         await clearAuthTokens();
       }
     } catch (error) {
       console.error("[AuthContext] Failed to fetch user:", error);
       setUser(null);
+      await clearAuthTokens();
     } finally {
+      console.log("[AuthContext] Fetch user complete - setting loading to false");
       setLoading(false);
     }
   };
@@ -139,9 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("[AuthContext] Device biometric authentication successful");
       
-      // Get all stored biometric keys (we need to try them since we don't have email input)
-      // For now, we'll need to get the email from the last registered user
-      // This is a limitation of removing the email input - we need to store the last used email
+      // Get the last used email
       const lastEmail = await getLastUsedEmail();
       
       if (!lastEmail) {
@@ -177,11 +186,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log("[AuthContext] Signing out user");
       await authClient.signOut();
     } catch (error) {
       console.error("[AuthContext] Sign out failed (API):", error);
     } finally {
       // Always clear local state
+      console.log("[AuthContext] Clearing local auth state");
       setUser(null);
       await clearAuthTokens();
     }

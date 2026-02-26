@@ -1,6 +1,6 @@
 
 import "react-native-reanimated";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -31,17 +31,25 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
   const [checkingAgent, setCheckingAgent] = React.useState(false);
+  const navigationAttempted = useRef(false);
 
   useEffect(() => {
+    console.log("[Layout] Effect triggered - loading:", loading, "user:", !!user, "segments:", segments);
+    
     if (loading) {
-      console.log("[Layout] Auth loading...");
+      console.log("[Layout] Auth still loading, waiting...");
       return;
+    }
+
+    // Reset navigation flag when user state changes
+    if (!loading) {
+      navigationAttempted.current = false;
     }
 
     const inAuthGroup = segments[0] === "auth" || segments[0] === "auth-popup" || segments[0] === "auth-callback";
     const inRegisterScreen = segments[0] === "(tabs)" && segments[1] === "register";
 
-    console.log("[Layout] Navigation check - user:", !!user, "segments:", segments, "inAuthGroup:", inAuthGroup, "inRegisterScreen:", inRegisterScreen);
+    console.log("[Layout] Navigation state - inAuthGroup:", inAuthGroup, "inRegisterScreen:", inRegisterScreen, "navigationAttempted:", navigationAttempted.current);
 
     // Allow access to registration screen without authentication
     if (inRegisterScreen) {
@@ -49,21 +57,36 @@ function RootLayoutNav() {
       return;
     }
 
-    if (!user && !inAuthGroup) {
-      // Redirect to auth if not authenticated and not on registration
-      console.log("[Layout] No user and not in auth group - redirecting to /auth");
-      router.replace("/auth");
-    } else if (user && inAuthGroup) {
-      // Check if agent is registered, then redirect appropriately
-      console.log("[Layout] User authenticated and in auth group - checking agent registration");
+    // Prevent multiple navigation attempts
+    if (navigationAttempted.current) {
+      console.log("[Layout] Navigation already attempted, skipping");
+      return;
+    }
+
+    if (!user && !inAuthGroup && !inRegisterScreen) {
+      // Redirect to auth if not authenticated
+      console.log("[Layout] No user detected - redirecting to /auth");
+      navigationAttempted.current = true;
+      setTimeout(() => {
+        router.replace("/auth");
+      }, 100);
+    } else if (user && (inAuthGroup || segments.length === 0)) {
+      // User is authenticated, check agent registration
+      console.log("[Layout] User authenticated - checking agent registration");
+      navigationAttempted.current = true;
       checkAgentRegistration();
     }
   }, [user, loading, segments]);
 
   const checkAgentRegistration = async () => {
-    if (checkingAgent) return;
+    if (checkingAgent) {
+      console.log("[Layout] Already checking agent, skipping");
+      return;
+    }
     
+    console.log("[Layout] Starting agent registration check");
     setCheckingAgent(true);
+    
     try {
       const { authenticatedGet, authenticatedPost } = await import("@/utils/api");
       
@@ -90,29 +113,34 @@ function RootLayoutNav() {
         try {
           const response = await authenticatedPost("/api/agents/register", pendingRegistration);
           console.log("[Layout] Agent registration completed:", response);
-          // Continue to check agent status below
         } catch (error) {
           console.error("[Layout] Failed to complete registration:", error);
-          // Still try to check if agent exists
         }
       }
 
+      console.log("[Layout] Fetching agent profile from /api/agents/me");
       const agent = await authenticatedGet("/api/agents/me");
+      
       if (agent) {
         // Agent is registered, go to home
-        console.log("[Layout] Agent found - redirecting to home");
-        router.replace("/(tabs)/(home)/");
+        console.log("[Layout] Agent found:", agent.civicCode, "- redirecting to dashboard");
+        setTimeout(() => {
+          router.replace("/(tabs)/(home)/");
+        }, 100);
       }
     } catch (error) {
       // Agent not registered, go to registration
-      console.log("[Layout] Agent not found - redirecting to registration");
-      router.replace("/(tabs)/register");
+      console.log("[Layout] Agent not found (expected for new users) - redirecting to registration");
+      setTimeout(() => {
+        router.replace("/(tabs)/register");
+      }, 100);
     } finally {
       setCheckingAgent(false);
     }
   };
 
   if (loading || checkingAgent) {
+    console.log("[Layout] Showing loading screen - loading:", loading, "checkingAgent:", checkingAgent);
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
         <ActivityIndicator size="large" color="#FF0000" />
@@ -120,6 +148,7 @@ function RootLayoutNav() {
     );
   }
 
+  console.log("[Layout] Rendering Stack navigation");
   return (
     <Stack
       screenOptions={{
