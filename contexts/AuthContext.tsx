@@ -40,9 +40,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initAttempts, setInitAttempts] = useState(0);
 
   useEffect(() => {
-    console.log("[AuthContext] Initializing - fetching user session");
+    console.log("[AuthContext] Initializing - fetching user session (attempt:", initAttempts + 1, ")");
     fetchUser();
 
     // Listen for deep links (e.g. from social auth redirects)
@@ -66,18 +67,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUser = async () => {
     try {
       console.log("[AuthContext] Fetching user session from Better Auth");
+      console.log("[AuthContext] Platform:", Platform.OS);
       setLoading(true);
       
-      // Add timeout to prevent infinite loading
+      // Add timeout to prevent infinite loading - reduced to 8 seconds for faster fallback
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Session check timeout")), 10000)
+        setTimeout(() => reject(new Error("Session check timeout")), 8000)
       );
       
+      console.log("[AuthContext] Calling authClient.getSession()...");
       const sessionPromise = authClient.getSession();
       
       const session = await Promise.race([sessionPromise, timeoutPromise]) as any;
       
-      console.log("[AuthContext] Session response:", session ? "Session found" : "No session");
+      console.log("[AuthContext] Session response received");
+      console.log("[AuthContext] Session data:", session ? "Present" : "Null");
       
       if (session?.data?.user) {
         console.log("[AuthContext] User authenticated:", session.data.user.email);
@@ -93,10 +97,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         await clearAuthTokens();
       }
-    } catch (error) {
-      console.error("[AuthContext] Failed to fetch user:", error);
+    } catch (error: any) {
+      console.error("[AuthContext] Failed to fetch user:", error.message || error);
+      console.error("[AuthContext] Error stack:", error.stack);
+      
+      // On timeout or error, assume no user and continue
       setUser(null);
       await clearAuthTokens();
+      
+      // Increment attempt counter
+      setInitAttempts(prev => prev + 1);
+      
+      // If we've failed multiple times, log a warning
+      if (initAttempts >= 2) {
+        console.warn("[AuthContext] Multiple failed attempts to fetch user session. Continuing without auth.");
+      }
     } finally {
       console.log("[AuthContext] Fetch user complete - setting loading to false");
       setLoading(false);
@@ -206,6 +221,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  console.log("[AuthContext] Rendering provider - loading:", loading, "user:", !!user);
+
   return (
     <AuthContext.Provider
       value={{
@@ -234,18 +251,27 @@ export function useAuth() {
 // Helper to store/retrieve the last used email for biometric sign-in
 async function getLastUsedEmail(): Promise<string | null> {
   const storageKey = "last_biometric_email";
-  if (Platform.OS === "web") {
-    return localStorage.getItem(storageKey);
-  } else {
-    return await SecureStore.getItemAsync(storageKey);
+  try {
+    if (Platform.OS === "web") {
+      return localStorage.getItem(storageKey);
+    } else {
+      return await SecureStore.getItemAsync(storageKey);
+    }
+  } catch (error) {
+    console.error("[AuthContext] Error getting last used email:", error);
+    return null;
   }
 }
 
 export async function setLastUsedEmail(email: string) {
   const storageKey = "last_biometric_email";
-  if (Platform.OS === "web") {
-    localStorage.setItem(storageKey, email);
-  } else {
-    await SecureStore.setItemAsync(storageKey, email);
+  try {
+    if (Platform.OS === "web") {
+      localStorage.setItem(storageKey, email);
+    } else {
+      await SecureStore.setItemAsync(storageKey, email);
+    }
+  } catch (error) {
+    console.error("[AuthContext] Error setting last used email:", error);
   }
 }

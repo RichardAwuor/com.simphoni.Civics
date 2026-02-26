@@ -10,6 +10,7 @@ export default function TabLayout() {
   const { user, loading: authLoading } = useAuth();
   const [checkingAgent, setCheckingAgent] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [checkTimeout, setCheckTimeout] = useState(false);
 
   useEffect(() => {
     console.log("[TabLayout iOS] Effect triggered - authLoading:", authLoading, "user:", !!user);
@@ -27,6 +28,20 @@ export default function TabLayout() {
 
     checkAgentRegistration();
   }, [user, authLoading]);
+
+  // Timeout fallback for agent check
+  useEffect(() => {
+    if (checkingAgent) {
+      const timeout = setTimeout(() => {
+        console.log("[TabLayout iOS] Agent check timeout - assuming not registered");
+        setCheckTimeout(true);
+        setCheckingAgent(false);
+        setIsRegistered(false);
+      }, 10000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [checkingAgent]);
 
   const checkAgentRegistration = async () => {
     console.log("[TabLayout iOS] Checking agent registration");
@@ -73,8 +88,8 @@ export default function TabLayout() {
         console.log("[TabLayout iOS] No agent found - needs registration");
         setIsRegistered(false);
       }
-    } catch (error) {
-      console.log("[TabLayout iOS] Agent not found (expected for new users):", error);
+    } catch (error: any) {
+      console.log("[TabLayout iOS] Agent not found (expected for new users):", error.message || error);
       setIsRegistered(false);
     } finally {
       setCheckingAgent(false);
@@ -87,7 +102,9 @@ export default function TabLayout() {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#D32F2F" }}>
         <ActivityIndicator size="large" color="#FFFFFF" />
-        <Text style={{ color: "#FFFFFF", marginTop: 16, fontSize: 16 }}>Loading...</Text>
+        <Text style={{ color: "#FFFFFF", marginTop: 16, fontSize: 16 }}>
+          {authLoading ? "Checking authentication..." : "Loading profile..."}
+        </Text>
       </View>
     );
   }

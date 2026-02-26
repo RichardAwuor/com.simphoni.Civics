@@ -16,6 +16,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -88,7 +89,7 @@ export default function RootLayout() {
   console.log("[RootLayout] Rendering with colorScheme:", colorScheme);
   
   return (
-    <>
+    <ErrorBoundary>
       <StatusBar style="auto" animated />
       <ThemeProvider
         value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
@@ -102,6 +103,6 @@ export default function RootLayout() {
           </WidgetProvider>
         </AuthProvider>
       </ThemeProvider>
-    </>
+    </ErrorBoundary>
   );
 }

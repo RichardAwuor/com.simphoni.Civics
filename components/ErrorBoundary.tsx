@@ -1,37 +1,16 @@
-/**
- * Error Boundary Component Template
- *
- * Catches JavaScript errors anywhere in the child component tree,
- * logs those errors, and displays a fallback UI.
- *
- * Usage:
- * ```tsx
- * <ErrorBoundary>
- *   <App />
- * </ErrorBoundary>
- * ```
- *
- * Or wrap specific screens:
- * ```tsx
- * <ErrorBoundary fallback={<CustomErrorScreen />}>
- *   <ComplexFeature />
- * </ErrorBoundary>
- * ```
- */
 
-import React, { Component, ReactNode } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import React, { Component, ReactNode } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
-  errorInfo: React.ErrorInfo | null;
+  errorInfo: any;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -45,6 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    console.error('[ErrorBoundary] Error caught:', error);
     return {
       hasError: true,
       error,
@@ -52,21 +32,17 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to console
-    console.error("Error caught by boundary:", error, errorInfo);
-
-    // Update state with error info
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('[ErrorBoundary] Component error:', error);
+    console.error('[ErrorBoundary] Error info:', errorInfo);
     this.setState({
       error,
       errorInfo,
     });
-
-    // Call custom error handler if provided
-    this.props.onError?.(error, errorInfo);
   }
 
   handleReset = () => {
+    console.log('[ErrorBoundary] Resetting error boundary');
     this.setState({
       hasError: false,
       error: null,
@@ -76,36 +52,32 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      // Custom fallback UI
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // Default fallback UI
+      const errorMessage = this.state.error?.message || 'Unknown error';
+      const errorStack = this.state.error?.stack || '';
+
       return (
         <View style={styles.container}>
-          <Text style={styles.title}>Oops! Something went wrong</Text>
-          <Text style={styles.message}>
-            We're sorry for the inconvenience. The app encountered an error.
-          </Text>
-
-          {__DEV__ && this.state.error && (
+          <View style={styles.content}>
+            <Text style={styles.title}>Something went wrong</Text>
+            <Text style={styles.message}>
+              The app encountered an error. Please try again.
+            </Text>
+            
             <ScrollView style={styles.errorDetails}>
-              <Text style={styles.errorTitle}>Error Details (Dev Only):</Text>
-              <Text style={styles.errorText}>
-                {this.state.error.toString()}
-              </Text>
-              {this.state.errorInfo && (
-                <Text style={styles.errorStack}>
-                  {this.state.errorInfo.componentStack}
-                </Text>
+              <Text style={styles.errorText}>Error: {errorMessage}</Text>
+              {__DEV__ && (
+                <Text style={styles.stackText}>{errorStack}</Text>
               )}
             </ScrollView>
-          )}
 
-          <TouchableOpacity style={styles.button} onPress={this.handleReset}>
-            <Text style={styles.buttonText}>Try Again</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={this.handleReset}>
+              <Text style={styles.buttonText}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       );
     }
@@ -117,57 +89,58 @@ export class ErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#D32F2F',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  content: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 24,
-    backgroundColor: "#fff",
+    width: '100%',
+    maxWidth: 500,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-    color: "#000",
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   message: {
     fontSize: 16,
-    textAlign: "center",
-    color: "#666",
-    marginBottom: 24,
+    color: '#666',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   errorDetails: {
-    maxHeight: 200,
-    width: "100%",
-    padding: 16,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#f5f5f5',
     borderRadius: 8,
-    marginBottom: 24,
-  },
-  errorTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-    color: "#FF3B30",
+    padding: 12,
+    marginBottom: 20,
+    maxHeight: 200,
   },
   errorText: {
-    fontSize: 12,
-    color: "#333",
-    fontFamily: "monospace",
+    fontSize: 14,
+    color: '#d32f2f',
+    fontWeight: '600',
     marginBottom: 8,
   },
-  errorStack: {
-    fontSize: 10,
-    color: "#666",
-    fontFamily: "monospace",
+  stackText: {
+    fontSize: 12,
+    color: '#666',
+    fontFamily: 'monospace',
   },
   button: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 32,
-    paddingVertical: 12,
+    backgroundColor: '#FF3B30',
     borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
   },
   buttonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });
