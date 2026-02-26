@@ -2,7 +2,7 @@
 {
   "expo": {
     "name": "Civic",
-    "slug": "kenya-civic-dklrkd",
+    "slug": "Civic",
     "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
@@ -36,7 +36,7 @@
       },
       "package": "com.simphoni.civic",
       "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
-      "versionCode": 10,
+      "versionCode": 11,
       "userInterfaceStyle": "automatic",
       "intentFilters": [
         {
@@ -99,8 +99,9 @@
           "faceIDPermission": "Allow Kenya Civic to use Face ID for secure biometric authentication."
         }
       ],
+      "./plugins/withAndroidColors.js",
       "./plugins/withAndroidStyles.js",
-      "./plugins/withAndroidColors.js"
+      "./plugins/withAndroidManifest.js"
     ],
     "experiments": {
       "typedRoutes": true

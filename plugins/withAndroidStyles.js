@@ -14,7 +14,7 @@ module.exports = function withCustomAndroidStyles(config) {
       styles.resources = {};
     }
 
-    // Remove any Material3Expressive theme references and use standard AppCompat themes
+    // Define standard AppCompat theme (no Material3 Expressive)
     const appTheme = {
       $: {
         name: 'AppTheme',
@@ -37,10 +37,14 @@ module.exports = function withCustomAndroidStyles(config) {
           _: 'false',
           $: { name: 'android:windowTranslucentNavigation' },
         },
+        {
+          _: 'true',
+          $: { name: 'android:windowDrawsSystemBarBackgrounds' },
+        },
       ],
     };
 
-    // Splash screen theme using expo-splash-screen's base theme
+    // Splash screen theme - use expo-splash-screen's base theme
     const splashTheme = {
       $: {
         name: 'Theme.App.SplashScreen',
@@ -62,8 +66,10 @@ module.exports = function withCustomAndroidStyles(config) {
       ],
     };
 
-    // Clear existing styles and add our corrected ones
+    // Replace all styles with our corrected ones
     styles.resources.style = [appTheme, splashTheme];
+
+    console.log('✅ Android styles configured with AppCompat themes (no Material3 Expressive)');
 
     return config;
   });

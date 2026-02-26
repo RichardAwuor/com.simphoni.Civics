@@ -13,16 +13,21 @@ module.exports = function withCustomAndroidColors(config) {
       colors.resources = {};
     }
 
-    // Define color resources
+    // Define all required color resources
     const colorResources = [
       { $: { name: 'colorPrimary' }, _: '#D32F2F' },
       { $: { name: 'colorPrimaryDark' }, _: '#B71C1C' },
       { $: { name: 'colorAccent' }, _: '#FF5252' },
       { $: { name: 'splashscreen_background' }, _: '#D32F2F' },
+      { $: { name: 'colorOnPrimary' }, _: '#FFFFFF' },
+      { $: { name: 'colorSecondary' }, _: '#FF5252' },
+      { $: { name: 'colorOnSecondary' }, _: '#FFFFFF' },
     ];
 
-    // Set color array
+    // Replace all colors with our defined ones
     colors.resources.color = colorResources;
+
+    console.log('✅ Android colors configured');
 
     return config;
   });
