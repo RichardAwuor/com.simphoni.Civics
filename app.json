@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "Civic",
@@ -8,10 +9,23 @@
     "scheme": "civic",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#D32F2F"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kenyacivic.app",
-      "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png"
+      "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
+      "buildNumber": "1.0.8",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["civic"]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +35,19 @@
       "package": "com.simphoni.civic",
       "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
       "versionCode": 9,
-      "userInterfaceStyle": "automatic"
+      "userInterfaceStyle": "automatic",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "civic"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",

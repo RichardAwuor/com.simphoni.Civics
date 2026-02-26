@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { Platform, ActivityIndicator, View } from "react-native";
+import { Platform, ActivityIndicator, View, Text } from "react-native";
 import { Redirect, useRouter } from "expo-router";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,7 @@ export default function TabLayout() {
 
     if (!user) {
       console.log("[TabLayout] No user in TabLayout - should redirect to auth");
+      setCheckingAgent(false);
       return;
     }
 
@@ -73,7 +74,7 @@ export default function TabLayout() {
         setIsRegistered(false);
       }
     } catch (error) {
-      console.log("[TabLayout] Agent not found (expected for new users)");
+      console.log("[TabLayout] Agent not found (expected for new users):", error);
       setIsRegistered(false);
     } finally {
       setCheckingAgent(false);
@@ -84,8 +85,9 @@ export default function TabLayout() {
   if (authLoading || checkingAgent) {
     console.log("[TabLayout] Showing loading screen");
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
-        <ActivityIndicator size="large" color="#FF0000" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#D32F2F" }}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+        <Text style={{ color: "#FFFFFF", marginTop: 16, fontSize: 16 }}>Loading...</Text>
       </View>
     );
   }
