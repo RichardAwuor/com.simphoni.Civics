@@ -1,4 +1,3 @@
-
 {
   "expo": {
     "name": "Civic",
@@ -22,7 +21,9 @@
       "infoPlist": {
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["civic"]
+            "CFBundleURLSchemes": [
+              "civic"
+            ]
           }
         ]
       }
@@ -45,7 +46,10 @@
               "scheme": "civic"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -105,7 +109,7 @@
       "eas": {
         "projectId": "your-project-id"
       },
-      "backendUrl": "https://prod-proj-fbz7nukarunpewn6kjwxz-liwg5h36mq-ey.a.run.app"
+      "backendUrl": "https://4cjk8xzg5w77tfq474mq4utfs59jke49.app.specular.dev"
     }
   }
 }
