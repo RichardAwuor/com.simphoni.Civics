@@ -1,46 +1,129 @@
 
-import React from 'react';
-import { Stack } from 'expo-router';
-import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
+import React, { useEffect, useState } from "react";
+import { Platform, ActivityIndicator, View } from "react-native";
+import { Redirect, useRouter } from "expo-router";
+import FloatingTabBar from "@/components/FloatingTabBar";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function TabLayout() {
-  // Define the tabs configuration
-  const tabs: TabBarItem[] = [
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [checkingAgent, setCheckingAgent] = useState(true);
+  const [isRegistered, setIsRegistered] = useState(false);
+
+  useEffect(() => {
+    console.log("[TabLayout] Effect triggered - authLoading:", authLoading, "user:", !!user);
+    
+    if (authLoading) {
+      console.log("[TabLayout] Auth still loading, waiting...");
+      return;
+    }
+
+    if (!user) {
+      console.log("[TabLayout] No user in TabLayout - should redirect to auth");
+      return;
+    }
+
+    checkAgentRegistration();
+  }, [user, authLoading]);
+
+  const checkAgentRegistration = async () => {
+    console.log("[TabLayout] Checking agent registration");
+    setCheckingAgent(true);
+    
+    try {
+      const { authenticatedGet, authenticatedPost } = await import("@/utils/api");
+      
+      // Check if there's pending registration data
+      let pendingRegistration = null;
+      if (Platform.OS === "web") {
+        const data = localStorage.getItem("pending_registration");
+        if (data) {
+          pendingRegistration = JSON.parse(data);
+          localStorage.removeItem("pending_registration");
+        }
+      } else {
+        const SecureStore = await import("expo-secure-store");
+        const data = await SecureStore.default.getItemAsync("pending_registration");
+        if (data) {
+          pendingRegistration = JSON.parse(data);
+          await SecureStore.default.deleteItemAsync("pending_registration");
+        }
+      }
+
+      // If there's pending registration, complete it now
+      if (pendingRegistration) {
+        console.log("[TabLayout] Completing pending registration for:", pendingRegistration.email);
+        try {
+          await authenticatedPost("/api/agents/register", pendingRegistration);
+          console.log("[TabLayout] Agent registration completed");
+        } catch (error) {
+          console.error("[TabLayout] Failed to complete registration:", error);
+        }
+      }
+
+      console.log("[TabLayout] Fetching agent profile from /api/agents/me");
+      const agent = await authenticatedGet("/api/agents/me");
+      
+      if (agent) {
+        console.log("[TabLayout] Agent found:", agent.civicCode);
+        setIsRegistered(true);
+      } else {
+        console.log("[TabLayout] No agent found - needs registration");
+        setIsRegistered(false);
+      }
+    } catch (error) {
+      console.log("[TabLayout] Agent not found (expected for new users)");
+      setIsRegistered(false);
+    } finally {
+      setCheckingAgent(false);
+    }
+  };
+
+  // Show loading while checking
+  if (authLoading || checkingAgent) {
+    console.log("[TabLayout] Showing loading screen");
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
+        <ActivityIndicator size="large" color="#FF0000" />
+      </View>
+    );
+  }
+
+  // Redirect to auth if no user
+  if (!user) {
+    console.log("[TabLayout] No user - redirecting to /auth");
+    return <Redirect href="/auth" />;
+  }
+
+  // Redirect to registration if not registered
+  if (!isRegistered) {
+    console.log("[TabLayout] User not registered - redirecting to register");
+    return <Redirect href="/(tabs)/register" />;
+  }
+
+  console.log("[TabLayout] User is registered - showing tabs");
+
+  const tabs = [
     {
-      name: '(home)',
-      route: '/(tabs)/(home)/',
-      icon: 'home',
-      label: 'Dashboard',
+      name: "Dashboard",
+      route: "/(tabs)/(home)/" as any,
+      ios_icon_name: "house.fill",
+      android_material_icon_name: "home",
     },
     {
-      name: 'on-location',
-      route: '/(tabs)/on-location',
-      icon: 'location-on',
-      label: 'On-Location',
+      name: "On-Location",
+      route: "/(tabs)/on-location" as any,
+      ios_icon_name: "location.fill",
+      android_material_icon_name: "location-on",
     },
     {
-      name: 'profile',
-      route: '/(tabs)/profile',
-      icon: 'person',
-      label: 'Profile',
+      name: "Profile",
+      route: "/(tabs)/profile" as any,
+      ios_icon_name: "person.fill",
+      android_material_icon_name: "person",
     },
   ];
 
-  // For Android and Web, use Stack navigation with custom floating tab bar
-  return (
-    <>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'none', // Remove fade animation to prevent black screen flash
-        }}
-      >
-        <Stack.Screen key="register" name="register" />
-        <Stack.Screen key="home" name="(home)" />
-        <Stack.Screen key="on-location" name="on-location" />
-        <Stack.Screen key="profile" name="profile" />
-      </Stack>
-      <FloatingTabBar tabs={tabs} />
-    </>
-  );
+  return <FloatingTabBar tabs={tabs} />;
 }
