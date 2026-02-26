@@ -1,9 +1,8 @@
-
 {
   "expo": {
     "name": "Civic",
-    "slug": "Civic",
-    "version": "1.0.5",
+    "slug": "kenya-civic-dklrkd",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
     "scheme": "civic",
@@ -21,7 +20,8 @@
       },
       "package": "com.simphoni.civic",
       "icon": "./assets/images/ef658ef2-2070-4e0e-afbc-4b4f707d727c.png",
-      "versionCode": 6
+      "versionCode": 9,
+      "userInterfaceStyle": "automatic"
     },
     "web": {
       "bundler": "metro",
@@ -79,7 +79,7 @@
       "eas": {
         "projectId": "your-project-id"
       },
-      "backendUrl": "https://4cjk8xzg5w77tfq474mq4utfs59jke49.app.specular.dev"
+      "backendUrl": "https://prod-proj-fbz7nukarunpewn6kjwxz-liwg5h36mq-ey.a.run.app"
     }
   }
 }
